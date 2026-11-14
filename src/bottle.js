@@ -74,7 +74,7 @@ export function popCork(btn) {
 
 // „Plopp!“ – kurz synthetisiert, keine Audiodatei nötig.
 let audioCtx;
-function playPop() {
+export function playPop() {
   try {
     audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
     const ctx = audioCtx, t = ctx.currentTime;

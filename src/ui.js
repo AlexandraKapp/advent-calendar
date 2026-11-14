@@ -5,7 +5,7 @@ export const TILTS = [-3, 2, -1.5, 3, -2.5, 1, 2.5, -1, 1.5, -3.5];
 export const colorFor = day => COLORS[day % COLORS.length];
 
 export const KIND_LABEL = {
-  emoji: "Emoji-Rätsel", wort: "Worträtsel", foto: "Foto-Challenge",
+  emoji: "Emoji-Rätsel", wort: "Worträtsel", aufgabe: "Emoji-Challenge", spiel: "Mini-Spiel", foto: "Foto-Challenge",
   zeichnen: "Zeichen-Challenge", rueckblick: "Rückblick",
 };
 

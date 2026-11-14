@@ -2,14 +2,16 @@ import { sb, BUCKET } from "./supabase.js";
 import { state } from "./state.js";
 import { $, esc, plural, setFeedback, friendlyError, onCleanup } from "./ui.js";
 import { shrinkImage, exportCanvas } from "./images.js";
+import { isPersonal, showTask, targetsFor } from "./person.js";
 
 export function buildChallenge({ day, door, body, overview }) {
   const isDraw = door.kind === "zeichnen";
+  const personal = isPersonal(door.question);
   const secs = door.seconds || 30;
 
   body.innerHTML =
     '<div class="emoji small">' + esc(door.emoji) + "</div>" +
-    '<p class="question">' + esc(door.question) + "</p>" +
+    '<p class="question" id="task"></p>' +
     '<div id="maker">' +
       (isDraw
         ? '<div class="pad-wrap"><canvas id="pad" width="800" height="800" aria-label="Zeichenfläche"></canvas><span class="timer" id="timer">' + secs + " s</span></div>" +
@@ -25,6 +27,8 @@ export function buildChallenge({ day, door, body, overview }) {
     '<div class="gallery" id="gallery"><p class="note">Lädt …</p></div>';
 
   const fb = $("#feedback", body);
+
+  showTask($("#task", body), day, door.question || "");
   const maker = $("#maker", body);
   const postBtn = $("#postBtn", body);
   let pending = null; // Blob, der hochgeladen wird
@@ -80,6 +84,8 @@ export function buildChallenge({ day, door, body, overview }) {
     const { data: rows, error } = await sb.from("posts")
       .select("id, day, user_id, path, created_at, profiles(name)")
       .eq("day", day).order("created_at");
+    // Bei persönlichen Aufgaben: wer wen gezogen hat
+    const targetOf = personal ? await targetsFor(day) : {};
     if (error) { gal.innerHTML = '<p class="note">Die Galerie lässt sich gerade nicht laden.</p>'; return; }
     const mine = rows.find(r => r.user_id === state.userId);
     maker.hidden = !!mine; // eigener Beitrag da: Werkzeuge ausblenden
@@ -104,7 +110,8 @@ export function buildChallenge({ day, door, body, overview }) {
       const im = document.createElement("img");
       im.src = urlFor[r.path] || ""; im.alt = "Beitrag von " + (r.profiles ? r.profiles.name : "jemandem"); im.loading = "lazy";
       const cap = document.createElement("figcaption");
-      cap.textContent = r.user_id === state.userId ? "Du" : (r.profiles ? r.profiles.name : "Jemand");
+      cap.textContent = (r.user_id === state.userId ? "Du" : (r.profiles ? r.profiles.name : "Jemand")) +
+        (targetOf[r.user_id] ? " → " + targetOf[r.user_id] : "");
       fig.append(im, cap);
       if (r.user_id === state.userId || state.isAdmin) {
         const del = document.createElement("button");

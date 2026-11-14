@@ -301,3 +301,20 @@ textarea { resize: vertical; min-height: 64px; }
 .video-frame { border: 3px solid var(--ink); border-radius: 10px; overflow: hidden; background: var(--ink); box-shadow: 4px 4px 0 var(--grape); }
 .video-frame video { display: block; width: 100%; max-height: 70vh; background: var(--ink); }
 a.btn { text-decoration: none; text-align: center; }
+
+/* Emoji-Challenge */
+.emoji-input { font-size: 1.6rem; letter-spacing: .15em; text-align: center; }
+.answers .emoji-answer { font-size: 1.5rem; letter-spacing: .1em; }
+.question .who { color: var(--magenta); }
+
+/* Mini-Spiel */
+.game-wrap { position: relative; border: 3px solid var(--ink); border-radius: 10px; overflow: hidden; box-shadow: 4px 4px 0 var(--grape); touch-action: none; user-select: none; -webkit-user-select: none; }
+.game-wrap canvas { display: block; width: 100%; height: auto; aspect-ratio: 360 / 540; max-height: 62vh; margin: 0 auto; object-fit: contain; background: var(--paper); }
+.game-hud { position: absolute; top: 8px; left: 8px; right: 8px; display: flex; justify-content: space-between; pointer-events: none; font-family: var(--display); font-size: 1.3rem; color: var(--yolk); -webkit-text-stroke: 1.5px var(--ink); text-shadow: 2px 2px 0 var(--ink); }
+.game-over { position: absolute; inset: 0; display: grid; place-content: center; gap: 12px; padding: 20px; text-align: center; background: rgba(255,250,240,.88); font-weight: 700; line-height: 1.4; }
+.game-over[hidden] { display: none; }
+.game-over b { font-family: var(--display); font-weight: 400; font-size: 2rem; color: var(--magenta); }
+.answers.board li { align-items: center; }
+.answers.board li .rank { min-width: 2.2em; }
+.answers.board li i { font-family: var(--display); font-weight: 400; font-size: 1.2rem; }
+.answers.board li.me { background: #fff7d6; }

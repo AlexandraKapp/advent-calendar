@@ -65,9 +65,10 @@ function doorEditor(day, d, s) {
       Object.entries(KIND_LABEL).map(([k, v]) => '<option value="' + k + '"' + (k === d.kind ? " selected" : "") + ">" + v + "</option>").join("") +
     '</select></div><div class="stack"><label class="lbl">Kategorie (Schild oben)</label><input type="text" name="category" value="' + esc(d.category) + '" placeholder="Film, Serie, …"></div></div>' +
     '<div class="stack"><label class="lbl">Emoji(s)</label><input type="text" name="emoji" value="' + esc(d.emoji) + '"></div>' +
-    '<div class="stack"><label class="lbl" data-for="question"></label><textarea name="question">' + esc(d.question) + "</textarea></div>" +
+    '<div class="stack"><label class="lbl" data-for="question"></label><textarea name="question">' + esc(d.question) + "</textarea>" +
+      '<p class="small" style="text-align:left">Tipp: Schreib <b>{person}</b> in die Aufgabe, z. B. „Stelle {person} auf einem Foto nach.“ Dann bekommt jede Person beim Öffnen jemand anderen aus der Gruppe zugelost.</p></div>' +
     '<div class="stack" data-only="challenge"><label class="lbl">Kurztitel fürs Rückblick-Video</label><input type="text" name="short" value="' + esc(d.short) + '"></div>' +
-    '<div class="stack" data-only="zeichnen"><label class="lbl">Sekunden zum Zeichnen</label><input type="number" name="seconds" min="3" max="600" value="' + (d.seconds ?? 30) + '"></div>' +
+    '<div class="stack" data-only="zeichnen"><label class="lbl">Sekunden (Zeichnen / Spiel)</label><input type="number" name="seconds" min="3" max="600" value="' + (d.seconds ?? 30) + '"></div>' +
     '<div class="stack" data-only="riddle"><label class="lbl">Lösung (wird am Folgetag angezeigt)</label><input type="text" name="solution" value="' + esc(s.solution) + '"></div>' +
     '<div class="stack" data-only="riddle"><label class="lbl">Gilt als richtig (mit Komma getrennt)</label><input type="text" name="accepted" value="' + esc((s.accepted || []).join(", ")) + '">' +
       '<p class="small" style="text-align:left">Groß/klein, Leerzeichen und Umlaute sind egal. Begriffe ab 4 Buchstaben dürfen irgendwo in der Antwort stehen („schirm“ passt zu „ein Regenschirm“), kürzere müssen genau passen.</p></div>' +
@@ -79,10 +80,10 @@ function doorEditor(day, d, s) {
     const isRiddle = kind === "emoji" || kind === "wort";
     f.querySelectorAll("[data-only]").forEach(el => {
       const only = el.dataset.only;
-      el.hidden = !(only === "riddle" ? isRiddle : only === "challenge" ? (kind === "foto" || kind === "zeichnen") : kind === only);
+      el.hidden = !(only === "riddle" ? isRiddle : only === "challenge" ? (kind === "foto" || kind === "zeichnen") : only === "zeichnen" ? (kind === "zeichnen" || kind === "spiel") : kind === only);
     });
     f.querySelector('[data-for="question"]').textContent =
-      kind === "wort" ? "Rätselfrage" : kind === "emoji" ? "Frage (leer = „Welcher Film, welche Serie?“)" : kind === "rueckblick" ? "Text (wird nicht angezeigt)" : "Aufgabe";
+      kind === "wort" ? "Rätselfrage" : kind === "aufgabe" ? "Aufgabe (Antwort: genau 3 Emojis, keine Lösung)" : kind === "spiel" ? "Spielanleitung (leer = Standardtext)" : kind === "emoji" ? "Frage (leer = „Welcher Film, welche Serie?“)" : kind === "rueckblick" ? "Text (wird nicht angezeigt)" : "Aufgabe";
   }
   f.kind.addEventListener("change", updateVisibility);
   updateVisibility();
@@ -96,7 +97,7 @@ function doorEditor(day, d, s) {
       emoji: f.emoji.value.trim(),
       question: f.question.value.trim(),
       short: f.short.value.trim(),
-      seconds: kind === "zeichnen" ? Math.min(600, Math.max(3, parseInt(f.seconds.value, 10) || 30)) : null,
+      seconds: kind === "zeichnen" || kind === "spiel" ? Math.min(600, Math.max(3, parseInt(f.seconds.value, 10) || 30)) : null,
     };
     const btn = f.querySelector("button[type=submit]"); btn.disabled = true;
     let { error } = await sb.from("doors").upsert(row);

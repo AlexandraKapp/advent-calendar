@@ -6,6 +6,7 @@ import { $, esc, colorFor, TILTS, KIND_LABEL, openDialog, closeDialog, toast } f
 import { buildRiddle } from "./riddle.js";
 import { buildChallenge } from "./challenge.js";
 import { buildRecap } from "./recap.js";
+import { buildGame } from "./game.js";
 import { renderAdmin } from "./admin.js";
 import { bottleSVG, popCork, wasPopped, rememberPopped } from "./bottle.js";
 
@@ -176,6 +177,7 @@ async function openDoor(day) {
   if (chip && door.category) chip.textContent = door.category;
   const ctx = { day, door, body, overview: o };
   if (door.kind === "rueckblick") buildRecap(ctx);
+  else if (door.kind === "spiel") buildGame(ctx);
   else if (door.kind === "foto" || door.kind === "zeichnen") buildChallenge(ctx);
   else buildRiddle(ctx);
 }
