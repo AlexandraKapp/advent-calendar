@@ -354,11 +354,4 @@ canvas.prev { width: 100%; height: auto; border: 3px solid var(--ink); border-ra
 /* Caption this (Meme) */
 .meme { position: relative; margin: 0; border: 3px solid var(--ink); border-radius: 10px; overflow: hidden; background: var(--ink); box-shadow: 4px 4px 0 var(--grape); }
 .meme img { display: block; width: 100%; height: auto; image-rendering: auto; }
-.meme figcaption {
-  position: absolute; left: 6px; right: 6px; bottom: 8px; text-align: center; text-transform: uppercase;
-  font-family: Impact, "Anton", "Arial Black", sans-serif; font-size: clamp(1.1rem, 6vw, 1.7rem); line-height: 1.1;
-  color: #fff; -webkit-text-stroke: 1.5px #000; paint-order: stroke fill; text-shadow: 0 0 4px #000; overflow-wrap: anywhere;
-}
-.answers.memes { gap: 16px; }
-.answers.memes li.meme-card { display: grid; gap: 6px; padding: 0; border: 0; background: none; box-shadow: none; transform: none; }
-.answers.memes li.meme-card > b { max-width: none; }
+
