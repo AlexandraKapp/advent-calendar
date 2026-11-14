@@ -83,7 +83,7 @@ Den Fortschritt siehst du auf GitHub unter **Actions**. Dort kannst du die Pipel
 - Vercel-Projekt `brunchies-advent` anlegen (`vercel project add brunchies-advent`).
 - Die automatischen Git-Deployments von Vercel sind in `vercel.json` ausgeschaltet. So veröffentlicht nur die Pipeline, und zwar erst nach der Datenbank.
 - Unter GitHub → **Settings → Secrets and variables → Actions → Variables** stehen diese Werte (nicht geheim):
-  `SUPABASE_PROJECT_REF`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`
+  `SUPABASE_PROJECT_REF`, `SUPABASE_POOLER_URL` (Supabase → Connect → Session pooler, ohne Passwort), `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`
   (die beiden Vercel-IDs stehen nach `vercel link` in `.vercel/project.json`).
 
 ### 3.0.1 Einmalig: zwei geheime Schlüssel (machst du selbst)
