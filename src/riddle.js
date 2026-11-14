@@ -6,7 +6,9 @@ import { isPersonal, showTask, targetsFor, emojiCount } from "./person.js";
 export async function buildRiddle({ day, door, body, overview }) {
   const revealed = !!overview.is_revealed;
   // „aufgabe“ (Emoji-Challenge): antworten wie bei einem Rätsel, aber ohne Lösung und ohne ✔/✘
-  const isTask = door.kind === "aufgabe";
+  // „aufgabe“ = genau 3 Emojis, „frage“ = freier Text. Beide ohne Lösung.
+  const isTask = door.kind === "aufgabe" || door.kind === "frage";
+  const isEmojiTask = door.kind === "aufgabe";
   const personal = isPersonal(door.question);
   // Admin-Vorschau: Lösung schon vorher zeigen
   const showSolution = revealed || (state.isAdmin && state.preview);
@@ -21,7 +23,9 @@ export async function buildRiddle({ day, door, body, overview }) {
     '<p class="solution" id="solution" hidden></p>' +
     (revealed ? "" :
       '<form id="answerForm"><label for="answer" class="sr">Deine Antwort</label>' +
-      '<input type="text" id="answer" maxlength="120" autocomplete="off" placeholder="' + (isTask ? "Deine 3 Emojis" : "Deine Antwort") + '"' + (isTask ? ' class="emoji-input"' : "") + ">" +
+      (door.kind === "frage"
+        ? '<textarea id="answer" maxlength="300" rows="3" placeholder="Deine Antwort"></textarea>'
+        : '<input type="text" id="answer" maxlength="120" autocomplete="off" placeholder="' + (isEmojiTask ? "Deine 3 Emojis" : "Deine Antwort") + '"' + (isEmojiTask ? ' class="emoji-input"' : "") + ">") +
       '<button class="btn" type="submit" id="sendBtn">Abschicken</button></form>' +
       '<p class="note-inline">' + (isTask ? "Bis morgen um 0:00 kannst du deine Antwort noch ändern." : "Die Lösung gibt es morgen um 0:00. Bis dahin kannst du deine Antwort noch ändern.") + "</p>") +
     '<p class="feedback" id="feedback" aria-live="polite"></p>' +
@@ -78,7 +82,7 @@ export async function buildRiddle({ day, door, body, overview }) {
       const who = document.createElement("b");
       who.textContent = (r.is_me ? "Du" : r.name) + (targetOf[r.user_id] ? " → " + targetOf[r.user_id] : "");
       const txt = document.createElement("span"); txt.textContent = r.answer;
-      if (isTask) txt.className = "emoji-answer";
+      if (isEmojiTask) txt.className = "emoji-answer";
       li.append(who, txt);
       if (marked) {
         const m = document.createElement("i");
@@ -122,9 +126,9 @@ export async function buildRiddle({ day, door, body, overview }) {
   if (input) {
     $("#answerForm", body).addEventListener("submit", async e => {
       e.preventDefault();
-      const val = input.value.trim().slice(0, 120);
+      const val = input.value.trim().slice(0, door.kind === "frage" ? 300 : 120);
       if (!val) { setFeedback(fb, "Tipp erst eine Antwort ein.", "no"); return; }
-      if (isTask) {
+      if (isEmojiTask) {
         const n = emojiCount(val);
         if (n !== 3) { setFeedback(fb, n === -1 ? "Bitte nur Emojis, kein Text." : "Genau 3 Emojis, bitte (du hast " + n + ").", "no"); return; }
       }

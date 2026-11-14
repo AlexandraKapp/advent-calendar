@@ -318,3 +318,35 @@ a.btn { text-decoration: none; text-align: center; }
 .answers.board li .rank { min-width: 2.2em; }
 .answers.board li i { font-family: var(--display); font-weight: 400; font-size: 1.2rem; }
 .answers.board li.me { background: #fff7d6; }
+
+/* Kreativ-Challenge: Auswahl Foto / Zeichnen / Text */
+.modes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.modes button { font: inherit; font-weight: 800; padding: 8px 4px; border: 3px solid var(--ink); border-radius: 8px; background: var(--paper); cursor: pointer; }
+.modes button.on { background: var(--ink); color: var(--yolk); }
+#cardText { min-height: 80px; }
+canvas.prev { width: 100%; height: auto; border: 3px solid var(--ink); border-radius: 10px; }
+
+/* Wer ist das? */
+.guess-head { display: flex; justify-content: space-between; font-weight: 800; }
+.guess-head #pts { color: var(--magenta); }
+.guess-img { border: 3px solid var(--ink); border-radius: 10px; overflow: hidden; background: var(--ink); box-shadow: 4px 4px 0 var(--grape); aspect-ratio: 3 / 4; }
+.guess-img img { display: block; width: 100%; height: 100%; object-fit: cover; transition: filter .4s; image-rendering: auto; }
+.guess-img img.s1 { filter: blur(4px); transform: scale(1.06); }
+.guess-img img.s2 { filter: blur(2.5px); transform: scale(1.03); }
+.guess-img img.s3 { filter: blur(1.5px); }
+.guess-img img.s4 { filter: blur(1px); }
+.guess-form { display: flex; gap: 8px; }
+.guess-form[hidden] { display: none; }
+.guess-form input { flex: 1; min-width: 0; }
+.guess-form.right input { border-color: var(--ok); background: #e6f7ee; }
+.guess-form.wrong input { border-color: var(--no); background: #fde8ee; }
+.guess-form :disabled { opacity: 1; cursor: default; }
+.guess-intro { text-align: center; line-height: 1.5; display: grid; gap: 4px; }
+.guess-intro p { margin: 0; }
+.big-score { font-family: var(--display); font-size: 2.2rem; color: var(--magenta); }
+
+/* Freie Frage: mehrzeilige Antworten (z. B. Haiku) */
+#answerForm:has(textarea) { flex-wrap: wrap; }
+#answerForm textarea { flex: 1 1 100%; min-height: 96px; }
+#answerForm:has(textarea) .btn { flex: 1 1 100%; }
+.answers li span { white-space: pre-line; }

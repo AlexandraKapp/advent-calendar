@@ -80,10 +80,10 @@ function doorEditor(day, d, s) {
     const isRiddle = kind === "emoji" || kind === "wort";
     f.querySelectorAll("[data-only]").forEach(el => {
       const only = el.dataset.only;
-      el.hidden = !(only === "riddle" ? isRiddle : only === "challenge" ? (kind === "foto" || kind === "zeichnen") : only === "zeichnen" ? (kind === "zeichnen" || kind === "spiel") : kind === only);
+      el.hidden = !(only === "riddle" ? isRiddle : only === "challenge" ? (kind === "foto" || kind === "zeichnen" || kind === "frei") : only === "zeichnen" ? (kind === "zeichnen" || kind === "spiel") : kind === only);
     });
     f.querySelector('[data-for="question"]').textContent =
-      kind === "wort" ? "Rätselfrage" : kind === "aufgabe" ? "Aufgabe (Antwort: genau 3 Emojis, keine Lösung)" : kind === "spiel" ? "Spielanleitung (leer = Standardtext)" : kind === "emoji" ? "Frage (leer = „Welcher Film, welche Serie?“)" : kind === "rueckblick" ? "Text (wird nicht angezeigt)" : "Aufgabe";
+      kind === "wort" ? "Rätselfrage" : kind === "aufgabe" ? "Aufgabe (Antwort: genau 3 Emojis, keine Lösung)" : kind === "frage" ? "Frage (freie Antwort, keine Lösung)" : kind === "spiel" ? "Spielanleitung (leer = Standardtext)" : kind === "raten" ? "Text oben (Fotos und Namen kommen über tools/wer-ist-das.swift)" : kind === "emoji" ? "Frage (leer = „Welcher Film, welche Serie?“)" : kind === "rueckblick" ? "Text (wird nicht angezeigt)" : "Aufgabe";
   }
   f.kind.addEventListener("change", updateVisibility);
   updateVisibility();

@@ -7,6 +7,7 @@ import { buildRiddle } from "./riddle.js";
 import { buildChallenge } from "./challenge.js";
 import { buildRecap } from "./recap.js";
 import { buildGame } from "./game.js";
+import { buildGuess } from "./guess.js";
 import { renderAdmin } from "./admin.js";
 import { bottleSVG, popCork, wasPopped, rememberPopped } from "./bottle.js";
 
@@ -178,7 +179,8 @@ async function openDoor(day) {
   const ctx = { day, door, body, overview: o };
   if (door.kind === "rueckblick") buildRecap(ctx);
   else if (door.kind === "spiel") buildGame(ctx);
-  else if (door.kind === "foto" || door.kind === "zeichnen") buildChallenge(ctx);
+  else if (door.kind === "raten") buildGuess(ctx);
+  else if (door.kind === "foto" || door.kind === "zeichnen" || door.kind === "frei") buildChallenge(ctx);
   else buildRiddle(ctx);
 }
 

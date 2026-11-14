@@ -5,22 +5,35 @@ import { shrinkImage, exportCanvas } from "./images.js";
 import { isPersonal, showTask, targetsFor } from "./person.js";
 
 export function buildChallenge({ day, door, body, overview }) {
-  const isDraw = door.kind === "zeichnen";
+  // foto: nur Foto · zeichnen: nur Zeichnen mit Countdown · frei: Foto, Zeichnen (ohne Countdown) oder Text
+  const isFree = door.kind === "frei";
   const personal = isPersonal(door.question);
-  const secs = door.seconds || 30;
+  const secs = door.kind === "zeichnen" ? (door.seconds || 30) : 0;
+  let mode = door.kind === "zeichnen" ? "draw" : "foto";
+
+  const fotoHtml =
+    '<div data-mode="foto"><label class="btn upload" for="photo">📸 Foto machen oder auswählen</label><input type="file" id="photo" accept="image/*" class="sr">' +
+    '<img id="photoPrev" class="prev" alt="Deine Vorschau" hidden></div>';
+  const drawHtml =
+    '<div data-mode="draw" class="stack"><div class="pad-wrap"><canvas id="pad" width="800" height="800" aria-label="Zeichenfläche"></canvas><span class="timer" id="timer">' + secs + " s</span></div>" +
+    '<div class="tools" id="tools"></div>' +
+    (secs ? '<p class="small">Der Countdown startet mit deinem ersten Strich.</p>' : "") +
+    '<button class="btn ghost" id="clearBtn" type="button">Nochmal von vorn</button></div>';
+  const textHtml =
+    '<div data-mode="text" class="stack"><label for="cardText" class="sr">Dein Text</label>' +
+    '<textarea id="cardText" maxlength="160" placeholder="Dein Text …"></textarea>' +
+    '<canvas id="card" class="prev" width="800" height="800" aria-label="Vorschau deiner Text-Karte"></canvas></div>';
 
   body.innerHTML =
     '<div class="emoji small">' + esc(door.emoji) + "</div>" +
     '<p class="question" id="task"></p>' +
-    '<div id="maker">' +
-      (isDraw
-        ? '<div class="pad-wrap"><canvas id="pad" width="800" height="800" aria-label="Zeichenfläche"></canvas><span class="timer" id="timer">' + secs + " s</span></div>" +
-          '<div class="tools" id="tools"></div>' +
-          '<p class="small">Der Countdown startet mit deinem ersten Strich.</p>' +
-          '<div class="row"><button class="btn ghost" id="clearBtn" type="button">Nochmal von vorn</button><button class="btn" id="postBtn" type="button">Posten</button></div>'
-        : '<label class="btn upload" for="photo">📸 Foto machen oder auswählen</label><input type="file" id="photo" accept="image/*" class="sr">' +
-          '<img id="photoPrev" class="prev" alt="Deine Vorschau" hidden>' +
-          '<button class="btn" id="postBtn" type="button" hidden>Posten</button>') +
+    '<div id="maker" class="stack">' +
+      (isFree ? '<div class="modes" role="tablist">' +
+        '<button type="button" class="on" data-pick="foto">📸 Foto</button>' +
+        '<button type="button" data-pick="draw">✏️ Zeichnen</button>' +
+        '<button type="button" data-pick="text">Aa Text</button></div>' : "") +
+      (door.kind === "zeichnen" ? drawHtml : door.kind === "foto" ? fotoHtml : fotoHtml + drawHtml + textHtml) +
+      '<button class="btn" id="postBtn" type="button"' + (door.kind === "foto" ? " hidden" : "") + ">Posten</button>" +
     "</div>" +
     '<p class="feedback" id="feedback" aria-live="polite"></p>' +
     '<div class="gallery-head"><h3>Galerie</h3><span id="gcount"></span></div>' +
@@ -31,11 +44,23 @@ export function buildChallenge({ day, door, body, overview }) {
   showTask($("#task", body), day, door.question || "");
   const maker = $("#maker", body);
   const postBtn = $("#postBtn", body);
-  let pending = null; // Blob, der hochgeladen wird
+  let pending = null; // Blob, der hochgeladen wird (Foto)
   let pad = null;
 
-  if (isDraw) pad = setupPad(body, secs);
-  else {
+  // Umschalten zwischen Foto / Zeichnen / Text (nur Kreativ-Challenge)
+  function showMode(m) {
+    mode = m;
+    maker.querySelectorAll("[data-mode]").forEach(el => { el.hidden = el.dataset.mode !== m; });
+    maker.querySelectorAll("[data-pick]").forEach(b => b.classList.toggle("on", b.dataset.pick === m));
+    setFeedback(fb, "");
+  }
+  if (isFree) {
+    maker.querySelectorAll("[data-pick]").forEach(b => b.addEventListener("click", () => showMode(b.dataset.pick)));
+    showMode("foto");
+  }
+
+  if ($("#pad", body)) pad = setupPad(body, secs);
+  if ($("#photo", body)) {
     const input = $("#photo", body), prev = $("#photoPrev", body);
     input.addEventListener("change", async () => {
       const f = input.files && input.files[0];
@@ -51,10 +76,17 @@ export function buildChallenge({ day, door, body, overview }) {
       }
     });
   }
+  if ($("#cardText", body)) {
+    const ta = $("#cardText", body), card = $("#card", body);
+    const redraw = () => drawTextCard(card, ta.value, day);
+    ta.addEventListener("input", redraw);
+    (document.fonts ? document.fonts.ready : Promise.resolve()).then(redraw);
+  }
 
   postBtn.addEventListener("click", async () => {
-    if (isDraw) pending = pad.isDirty() ? await exportCanvas($("#pad", body)) : null;
-    if (!pending) { setFeedback(fb, isDraw ? "Erst zeichnen!" : "Erst ein Foto auswählen.", "no"); return; }
+    if (mode === "draw") pending = pad.isDirty() ? await exportCanvas($("#pad", body)) : null;
+    if (mode === "text") pending = $("#cardText", body).value.trim() ? await exportCanvas($("#card", body)) : null;
+    if (!pending) { setFeedback(fb, mode === "draw" ? "Erst zeichnen!" : mode === "text" ? "Erst etwas schreiben!" : "Erst ein Foto auswählen.", "no"); return; }
     postBtn.disabled = true; postBtn.textContent = "Wird gepostet …";
     const path = day + "/" + state.userId + "/" + crypto.randomUUID() + ".jpg";
     const up = await sb.storage.from(BUCKET).upload(path, pending, { contentType: "image/jpeg", upsert: false });
@@ -155,8 +187,10 @@ function setupPad(body, secs) {
     tools.append(b);
   });
 
+  if (!secs) timerEl.hidden = true;
   function startTimer() {
     if (started) return; started = true;
+    if (!secs) return; // Kreativ-Challenge: ohne Countdown
     iv = setInterval(() => {
       left--; timerEl.textContent = left + " s";
       if (left <= 3) timerEl.classList.add("hot");
@@ -187,4 +221,39 @@ function setupPad(body, secs) {
   });
   onCleanup(() => clearInterval(iv));
   return { isDirty: () => dirty };
+}
+
+// ---------- Text als gestaltete Karte ----------
+const CARD_COLORS = ["#ff3ea5", "#00bfc4", "#ffcc1a", "#3ddc84", "#9d7bff", "#ff7a1a"];
+function drawTextCard(cv, text, day) {
+  const cx = cv.getContext("2d"), W = cv.width, pad = 70;
+  cx.fillStyle = CARD_COLORS[day % CARD_COLORS.length]; cx.fillRect(0, 0, W, W);
+  cx.fillStyle = "rgba(255,255,255,.25)";
+  for (let y = 20; y < W; y += 40) for (let x = (y / 40) % 2 ? 20 : 40; x < W; x += 40) cx.fillRect(x, y, 4, 4);
+  cx.fillStyle = "#fffaf0"; cx.strokeStyle = "#1b1030"; cx.lineWidth = 10;
+  cx.beginPath(); cx.roundRect(40, 40, W - 80, W - 80, 30); cx.fill(); cx.stroke();
+  const t = (text || "").trim() || "Dein Text …";
+  cx.fillStyle = (text || "").trim() ? "#1b1030" : "rgba(27,16,48,.35)";
+  cx.textAlign = "center"; cx.textBaseline = "middle";
+  // Größte Schrift suchen, bei der alles passt
+  let size = 96, lines;
+  for (; size >= 28; size -= 4) {
+    cx.font = "800 " + size + "px Figtree, system-ui, sans-serif";
+    lines = wrap(cx, t, W - 2 * pad - 40);
+    if (lines.length * size * 1.2 <= W - 2 * pad - 40) break;
+  }
+  const lh = size * 1.2, y0 = W / 2 - (lines.length - 1) * lh / 2;
+  lines.forEach((l, i) => cx.fillText(l, W / 2, y0 + i * lh));
+}
+function wrap(cx, text, maxW) {
+  const out = [];
+  text.split("\n").forEach(par => {
+    let line = "";
+    par.split(/\s+/).forEach(w => {
+      const test = line ? line + " " + w : w;
+      if (cx.measureText(test).width > maxW && line) { out.push(line); line = w; } else line = test;
+    });
+    out.push(line);
+  });
+  return out;
 }
