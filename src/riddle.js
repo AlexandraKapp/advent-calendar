@@ -5,16 +5,19 @@ import { isPersonal, showTask, targetsFor, emojiCount } from "./person.js";
 
 export async function buildRiddle({ day, door, body, overview }) {
   const revealed = !!overview.is_revealed;
-  // „aufgabe“ (Emoji-Challenge): antworten wie bei einem Rätsel, aber ohne Lösung und ohne ✔/✘
-  // „aufgabe“ = genau 3 Emojis, „frage“ = freier Text. Beide ohne Lösung.
-  const isTask = door.kind === "aufgabe" || door.kind === "frage";
+  // Ohne Lösung und ohne ✔/✘: „aufgabe“ = genau 3 Emojis, „frage“ = freier Text,
+  // „meme“ = Bildunterschrift zu einem Foto (Foto im geschützten Speicher „tuerchen“)
+  const isTask = door.kind === "aufgabe" || door.kind === "frage" || door.kind === "meme";
+  const isMeme = door.kind === "meme";
   const isEmojiTask = door.kind === "aufgabe";
   const personal = isPersonal(door.question);
   // Admin-Vorschau: Lösung schon vorher zeigen
   const showSolution = revealed || (state.isAdmin && state.preview);
 
   body.innerHTML =
-    (isTask
+    (isMeme
+      ? '<p class="question" id="task"></p><figure class="meme" id="memeMain"><img id="memeImg" alt="Meme-Foto"><figcaption id="memePrev"></figcaption></figure>'
+      : isTask
       ? '<div class="emoji small">' + esc(door.emoji) + '</div><p class="question" id="task"></p>'
       : door.kind === "wort"
       ? '<p class="question">' + esc(door.question) + "</p>"
@@ -25,11 +28,11 @@ export async function buildRiddle({ day, door, body, overview }) {
       '<form id="answerForm"><label for="answer" class="sr">Deine Antwort</label>' +
       (door.kind === "frage"
         ? '<textarea id="answer" maxlength="300" rows="3" placeholder="Deine Antwort"></textarea>'
-        : '<input type="text" id="answer" maxlength="120" autocomplete="off" placeholder="' + (isEmojiTask ? "Deine 3 Emojis" : "Deine Antwort") + '"' + (isEmojiTask ? ' class="emoji-input"' : "") + ">") +
+        : '<input type="text" id="answer" maxlength="120" autocomplete="off" placeholder="' + (isEmojiTask ? "Deine 3 Emojis" : isMeme ? "Deine Caption" : "Deine Antwort") + '"' + (isEmojiTask ? ' class="emoji-input"' : "") + ">") +
       '<button class="btn" type="submit" id="sendBtn">Abschicken</button></form>' +
       '<p class="note-inline">' + (isTask ? "Bis morgen um 0:00 kannst du deine Antwort noch ändern." : "Die Lösung gibt es morgen um 0:00. Bis dahin kannst du deine Antwort noch ändern.") + "</p>") +
     '<p class="feedback" id="feedback" aria-live="polite"></p>' +
-    '<div class="gallery-head"><h3>Antworten</h3><span id="gcount"></span></div>' +
+    '<div class="gallery-head"><h3>' + (isMeme ? "Memes" : "Antworten") + '</h3><span id="gcount"></span></div>' +
     '<ul class="answers" id="answers"><li class="note">Lädt …</li></ul>';
 
   const fb = $("#feedback", body);
@@ -38,7 +41,17 @@ export async function buildRiddle({ day, door, body, overview }) {
   const input = $("#answer", body);
   let totalCount = overview.count || 0;
   let targetOf = {};
-  if (isTask) showTask($("#task", body), day, door.question || "");
+  if (isTask) showTask($("#task", body), day, door.question || (isMeme ? "Caption this!" : ""));
+
+  // Meme: Foto laden und die Caption beim Tippen live darüber zeigen
+  let memeUrl = "";
+  if (isMeme) {
+    const { data: img } = await sb.storage.from("tuerchen").createSignedUrl(day + ".jpg", 60 * 60 * 3);
+    if (img) { memeUrl = img.signedUrl; $("#memeImg", body).src = memeUrl; }
+    else $("#memeMain", body).hidden = true;
+    const prev = $("#memePrev", body);
+    if (input) input.addEventListener("input", () => { prev.textContent = input.value; });
+  }
 
   if (showSolution) {
     const { data: sol } = await sb.from("door_solutions").select("solution").eq("day", day).maybeSingle();
@@ -59,7 +72,7 @@ export async function buildRiddle({ day, door, body, overview }) {
 
   function paint(rows) {
     const mine = rows.find(r => r.is_me);
-    if (input && mine && !input.value) input.value = mine.answer;
+    if (input && mine && !input.value) { input.value = mine.answer; if (isMeme) $("#memePrev", body).textContent = mine.answer; }
     const canSeeAll = mine || revealed || state.isAdmin;
     const count = canSeeAll ? rows.length : totalCount;
     gcount.textContent = count ? plural(count, "Antwort", "Antworten") : "";
@@ -75,8 +88,20 @@ export async function buildRiddle({ day, door, body, overview }) {
 
     // Eigene Antwort zuerst
     rows.sort((a, b) => (b.is_me ? 1 : 0) - (a.is_me ? 1 : 0));
+    if (isMeme) list.classList.add("memes");
     rows.forEach(r => {
       const li = document.createElement("li");
+      if (isMeme) {
+        // Jede Antwort als eigenes Meme: Foto + Caption, Name darunter
+        li.className = "meme-card";
+        li.innerHTML = '<figure class="meme"><img alt="" loading="lazy"><figcaption></figcaption></figure><b></b>';
+        li.querySelector("img").src = memeUrl;
+        li.querySelector("figcaption").textContent = r.answer;
+        li.querySelector("b").textContent = r.is_me ? "Du" : r.name;
+        if (state.isAdmin) { li.classList.add("has-adm"); li.append(adminControls(r)); }
+        list.append(li);
+        return;
+      }
       const marked = !isTask && r.correct !== null && r.correct !== undefined;
       if (marked) li.className = r.correct ? "right" : "wrong";
       const who = document.createElement("b");
