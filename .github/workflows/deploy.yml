@@ -31,10 +31,11 @@ jobs:
       - uses: supabase/setup-cli@v1
         with:
           version: 2.109.1
-      - name: Projekt verknüpfen
-        run: supabase link --debug --project-ref "${{ vars.SUPABASE_PROJECT_REF }}" < /dev/null
+      # Statt „supabase link“ (braucht viele Token-Rechte) nur die Projekt-Nummer hinterlegen.
+      - name: Projekt festlegen
+        run: mkdir -p supabase/.temp && printf '%s' "${{ vars.SUPABASE_PROJECT_REF }}" > supabase/.temp/project-ref
       - name: Neue Migrationen einspielen
-        run: supabase db push < /dev/null
+        run: supabase db push --linked < /dev/null
 
   vercel:
     name: Webseite (Vercel)
