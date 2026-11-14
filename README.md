@@ -4,7 +4,7 @@ Ein Online-Adventskalender für unsere Brunch-Gruppe: 24 Türchen im Dezember 20
 Emoji-Rätseln, Worträtseln, Foto- und Zeichen-Challenges und am 24. einem automatischen
 Video-Rückblick aus allen Fotos und Zeichnungen der Gruppe.
 
-Gestaltet im Stil **Brunch × Weihnachten × 90er**: Memphis-Muster, knallige Farben,
+Gestaltet im Stil **Brunch × Weihnachten × 90er**: Pixel-Weihnachtsmuster, knallige Farben,
 Popups im Windows-95-Look und Retro-Schriften. Gebaut für das Handy, läuft aber auch am Rechner.
 
 ## So funktioniert's
