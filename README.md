@@ -1,8 +1,7 @@
 # 🥂🎄 Brunchies-Adventskalender
 
 Ein Online-Adventskalender für unsere Brunch-Gruppe: 24 Türchen im Dezember 2026 mit
-Emoji-Rätseln, Worträtseln, Foto- und Zeichen-Challenges und am 24. einem automatischen
-Video-Rückblick aus allen Fotos und Zeichnungen der Gruppe.
+Emoji-Rätseln, Worträtseln, Foto- und Zeichen-Challenges und am 24. einem Video.
 
 Gestaltet im Stil **Brunch × Weihnachten × 90er**: Pixel-Weihnachtsmuster, knallige Farben,
 Popups im Windows-95-Look und Retro-Schriften. Gebaut für das Handy, läuft aber auch am Rechner.
@@ -14,7 +13,7 @@ Popups im Windows-95-Look und Retro-Schriften. Gebaut für das Handy, läuft abe
 | 🧩 **Emoji-Rätsel** (Filme & Serien) und 📝 **Worträtsel** | Antwort eintippen, bis Mitternacht änderbar | Die Antworten der anderen (mit Namen) erst nach der eigenen. Am nächsten Tag um 0:00 die Lösung, jede Antwort mit ✔ oder ✘ |
 | 📸 **Foto-Challenge** | Foto aufnehmen oder aus der Galerie wählen; es wird vor dem Hochladen verkleinert | Die Galerie der anderen erst nach dem eigenen Beitrag. Eigene Beiträge lassen sich löschen |
 | ✏️ **Zeichen-Challenge** | Im Browser mit dem Finger zeichnen, mit Countdown ab dem ersten Strich | wie bei der Foto-Challenge |
-| 🎬 **Rückblick (24.)** | Video abspielen, als Datei speichern oder teilen | alle Fotos und Zeichnungen der Gruppe |
+| 🎬 **Video (24.)** | Video abspielen oder speichern | ein Video, das geschützt in Supabase liegt und erst ab dem 24. abrufbar ist |
 
 - **Anmeldung ohne Passwort:** E-Mail eingeben, auf den Link in der Mail tippen (oder den Code eingeben), Namen wählen, fertig. Man bleibt den ganzen Monat angemeldet.
 - **Admin-Bereich:** Türchen und Lösungen bearbeiten, Vorschau mit allen offenen Türchen, alles löschen, Bewertungen von Hand korrigieren.
@@ -46,9 +45,10 @@ src/
   auth.js               Anmeldung per Magic Link / Code, Name festlegen
   riddle.js             Rätsel-Türchen
   challenge.js          Foto- und Zeichen-Challenges
-  recap.js              Video-Rückblick (Tür 24) inkl. Download
+  recap.js              Video an Tür 24
   admin.js              Admin-Bereich
   images.js             Bilder verkleinern
+  bottle.js             Sektflaschen-Türchen mit Korkenknall
   style.css             Das komplette Design
 supabase/
   migrations/           Datenbank-Tabellen und Sicherheitsregeln

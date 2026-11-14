@@ -52,46 +52,86 @@ h1 .hl { color: var(--paper); text-shadow: 3px 3px 0 var(--teal), 6px 6px 0 var(
   font-weight: 800; font-variant-numeric: tabular-nums; box-shadow: 3px 3px 0 var(--ink);
 }
 .pill.preview { background: var(--yolk); }
-.grid { display: grid; gap: 14px; grid-template-columns: repeat(6, 1fr); padding: 6px; }
-@media (max-width: 560px) { .grid { grid-template-columns: repeat(4, 1fr); gap: 12px; } }
+.grid { display: grid; gap: 10px 14px; grid-template-columns: repeat(6, minmax(0, 1fr)); padding: 14px 6px 6px; }
+@media (max-width: 560px) { .grid { gap: 8px 6px; padding: 12px 0 4px; } }
+
+/* Türchen = Sektflasche */
 .door {
   --c: var(--magenta); --tilt: 0deg;
-  aspect-ratio: 1; cursor: pointer; position: relative; overflow: visible;
-  background-color: var(--c);
-  background-image: radial-gradient(rgba(255,255,255,.35) 2px, transparent 2.5px);
-  background-size: 12px 12px;
-  color: var(--ink);
-  border: 3px solid var(--ink); border-radius: 14px;
-  box-shadow: 5px 5px 0 var(--ink);
-  font-family: var(--display); font-size: clamp(1.4rem, 5vw, 2.2rem);
-  display: grid; place-items: center;
-  text-shadow: 2px 2px 0 var(--paper);
+  aspect-ratio: 60 / 124; cursor: pointer; position: relative; overflow: visible;
+  background: none; border: 0; padding: 0; margin: 0;
+  color: var(--ink); -webkit-tap-highlight-color: transparent;
   transform: rotate(var(--tilt));
-  transition: transform .18s cubic-bezier(.3,1.6,.6,1), box-shadow .18s;
+  transition: transform .18s cubic-bezier(.3,1.6,.6,1);
 }
-.door:nth-child(3n) { background-image: repeating-linear-gradient(45deg, rgba(255,255,255,.28) 0 6px, transparent 6px 14px); }
-.door:nth-child(4n) { border-radius: 50% 50% 14px 14px; }
-.door:hover { transform: rotate(0) scale(1.06); box-shadow: 7px 7px 0 var(--ink); }
-.door:active { transform: rotate(0) translate(3px,3px); box-shadow: 2px 2px 0 var(--ink); }
-.door:focus-visible { outline: 4px solid var(--ink); outline-offset: 4px; }
-.door.big {
-  grid-column: span 2; aspect-ratio: auto; border-radius: 14px;
-  background: linear-gradient(135deg, var(--magenta), var(--grape) 50%, var(--teal));
-  color: var(--yolk); text-shadow: 3px 3px 0 var(--ink); font-size: clamp(1.9rem, 7.5vw, 3rem);
-}
-.door.locked { filter: saturate(.45); }
+.door .bottle { width: 100%; height: auto; display: block; overflow: visible; filter: drop-shadow(4px 4px 0 var(--ink)); }
+.door:hover { transform: rotate(0) scale(1.06); }
+.door:active { transform: rotate(0) translateY(3px); }
+.door:focus-visible { outline: 4px solid var(--ink); outline-offset: 4px; border-radius: 12px; }
+
+.bottle .glass { fill: #1f7a52; stroke: var(--ink); stroke-width: 2.5; stroke-linejoin: round; }
+.bottle .shine { fill: rgba(255,255,255,.35); }
+.bottle .foil { fill: var(--yolk); stroke: var(--ink); stroke-width: 2.2; stroke-linejoin: round; }
+.bottle .label { fill: var(--c); stroke: var(--ink); stroke-width: 2.2; }
+.bottle .label-num { font-family: var(--display); font-size: 19px; fill: var(--ink); paint-order: stroke; stroke: var(--paper); stroke-width: 3px; }
+.bottle .cork-body { fill: #d39a5b; stroke: var(--ink); stroke-width: 2.2; stroke-linejoin: round; }
+.bottle .wire { fill: none; stroke: #8a8f99; stroke-width: 1.2; }
+.bottle .cork, .bottle .fizz { transform-box: fill-box; transform-origin: 50% 100%; }
+.bottle .fizz { display: none; }
+.bottle .fizz circle { fill: var(--paper); stroke: var(--ink); stroke-width: 1.2; }
+
+/* zu: etwas blasser, mit Schloss */
+.door.locked .bottle { filter: drop-shadow(4px 4px 0 var(--ink)) saturate(.45); }
 .door.locked::after {
-  content: "🔒"; position: absolute; top: -8px; right: -8px; font-size: .9rem; text-shadow: none;
-  background: var(--paper); border: 2px solid var(--ink); border-radius: 999px; width: 26px; height: 26px;
+  content: "🔒"; position: absolute; top: 18%; right: -4px; font-size: .8rem;
+  background: var(--paper); border: 2px solid var(--ink); border-radius: 999px; width: 24px; height: 24px;
   display: grid; place-items: center;
 }
-.door.solved { background: var(--paper); text-shadow: none; }
-.door.solved .num {
-  position: absolute; top: -10px; left: -8px; font-size: .8rem; font-family: var(--body); font-weight: 800;
-  background: var(--c); border: 2px solid var(--ink); border-radius: 999px; padding: 1px 7px; z-index: 1;
+/* offen, aber noch verkorkt: wackelt kurz, wenn man mit der Maus drüberfährt */
+.door.ready:hover .bottle { animation: wiggle .5s ease-in-out; transform-origin: 50% 100%; }
+@keyframes wiggle { 0%, 100% { transform: rotate(0); } 20% { transform: rotate(-5deg); } 45% { transform: rotate(4deg); } 70% { transform: rotate(-2deg); } }
+/* offen: Korken weg, es sprudelt */
+.door.uncorked .cork { display: none; }
+.door.uncorked .fizz { display: block; }
+.door.uncorked .fizz circle { animation: bubble 2.2s ease-in infinite; transform-box: fill-box; transform-origin: center; }
+.door.uncorked .fizz circle:nth-child(2) { animation-delay: .7s; }
+.door.uncorked .fizz circle:nth-child(3) { animation-delay: 1.4s; }
+@keyframes bubble { 0% { transform: translateY(8px) scale(.4); opacity: 0; } 25% { opacity: 1; } 100% { transform: translateY(-14px) scale(1); opacity: 0; } }
+/* der Knall */
+.door.popping { z-index: 5; }
+.door.popping .bottle { animation: shake .2s linear 2; }
+.door.popping .cork { animation: cork-fly .6s cubic-bezier(.2,.7,.4,1) forwards; }
+@keyframes shake { 25% { transform: rotate(-4deg); } 75% { transform: rotate(4deg); } }
+@keyframes cork-fly { 0% { transform: none; opacity: 1; } 75% { opacity: 1; } 100% { transform: translate(22px, -130px) rotate(620deg); opacity: 0; } }
+.door .burst { position: absolute; left: 50%; top: 8%; width: 0; height: 0; pointer-events: none; z-index: 2; }
+.door .burst i {
+  position: absolute; width: 10px; height: 10px; border-radius: 3px; border: 2px solid var(--ink);
+  animation: spray .6s ease-out forwards;
 }
-.door.solved .emo { position: relative; font-size: clamp(.85rem, 2.8vw, 1.15rem); font-family: var(--body); text-align: center; padding: 0 4px; line-height: 1.2; }
-.door .tag { position: absolute; bottom: -9px; right: -9px; font-size: .95rem; background: var(--paper); border: 2px solid var(--ink); border-radius: 999px; width: 30px; height: 30px; display: grid; place-items: center; text-shadow: none; }
+@keyframes spray { 0% { transform: translate(-50%, -50%) scale(.3); opacity: 1; } 100% { transform: translate(calc(var(--x) - 50%), calc(var(--y) - 50%)) rotate(200deg) scale(1); opacity: 0; } }
+
+.door .plopp {
+  position: absolute; left: 50%; top: -6%; z-index: 3; pointer-events: none; white-space: nowrap;
+  font-family: var(--display); font-size: 1rem; color: var(--yolk); -webkit-text-stroke: 1.5px var(--ink);
+  text-shadow: 2px 2px 0 var(--ink); animation: plopp .6s cubic-bezier(.3,1.6,.6,1) forwards;
+}
+@keyframes plopp { 0% { transform: translate(-50%, 0) scale(.2) rotate(-12deg); opacity: 0; } 30% { opacity: 1; } 100% { transform: translate(-50%, -26px) scale(1.15) rotate(-8deg); opacity: 0; } }
+
+/* Abzeichen */
+.door .tag { position: absolute; bottom: -6px; right: -6px; font-size: .85rem; background: var(--paper); border: 2px solid var(--ink); border-radius: 999px; width: 28px; height: 28px; display: grid; place-items: center; }
+.door .check { position: absolute; bottom: -6px; left: -6px; font-size: .8rem; font-weight: 800; color: var(--paper); background: var(--ok); border: 2px solid var(--ink); border-radius: 999px; width: 28px; height: 28px; display: grid; place-items: center; }
+
+/* Tür 24: die große Flasche auf Glitzer-Hintergrund */
+.door.big {
+  aspect-ratio: 60 / 124; border-radius: 12px; padding: 0;
+  background: linear-gradient(135deg, var(--magenta), var(--grape) 50%, var(--teal));
+  border: 3px solid var(--ink); box-shadow: 5px 5px 0 var(--ink);
+}
+.door.big::before { content: "✨"; position: absolute; top: 4px; left: 5px; font-size: .8rem; z-index: 1; }
+.door.big .bottle { position: absolute; left: 12%; top: 6%; width: 76%; height: 88%; }
+.door.big .label { fill: var(--yolk); }
+.door.big.locked::after { top: 18%; right: -4px; }
+
 footer { font-size: .9rem; font-weight: 600; text-align: center; }
 
 /* Popup: Windows-95-Fenster */
@@ -200,7 +240,7 @@ input[type=text]:focus { outline: none; box-shadow: 0 0 0 4px var(--c); }
 .gallery figcaption { padding: 6px 4px; font-weight: 800; font-size: .9rem; overflow-wrap: anywhere; text-align: center; }
 .gallery .del { font: inherit; font-size: .75rem; border: none; border-top: 2px solid var(--ink); background: transparent; padding: 4px; cursor: pointer; color: var(--no); font-weight: 800; }
 @media (prefers-reduced-motion: reduce) {
-  .door, .card { transition: none; animation: none; }
+  .door, .card, .door .bottle, .door .fizz circle { transition: none; animation: none !important; }
   .door:hover { transform: rotate(var(--tilt)); }
 }
 
@@ -246,3 +286,18 @@ textarea { resize: vertical; min-height: 64px; }
 .card-body > * { min-width: 0; }
 .answers li.has-adm { flex-wrap: wrap; }
 .answers li.has-adm .adm { flex-basis: 100%; justify-content: flex-end; }
+
+/* Handy: 6 Flaschen pro Zeile, darum kleinere Abzeichen */
+@media (max-width: 560px) {
+  .door .tag, .door .check { width: 20px; height: 20px; font-size: .6rem; bottom: -4px; }
+  .door .tag { right: -5px; } .door .check { left: -5px; }
+  .door.locked::after { width: 18px; height: 18px; font-size: .55rem; right: -5px; }
+  .door .bottle { filter: drop-shadow(2px 2px 0 var(--ink)); }
+  .door.locked .bottle { filter: drop-shadow(2px 2px 0 var(--ink)) saturate(.45); }
+  .door .plopp { font-size: .8rem; }
+}
+
+/* Tür 24: Video */
+.video-frame { border: 3px solid var(--ink); border-radius: 10px; overflow: hidden; background: var(--ink); box-shadow: 4px 4px 0 var(--grape); }
+.video-frame video { display: block; width: 100%; max-height: 70vh; background: var(--ink); }
+a.btn { text-decoration: none; text-align: center; }

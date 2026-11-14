@@ -7,6 +7,7 @@ import { buildRiddle } from "./riddle.js";
 import { buildChallenge } from "./challenge.js";
 import { buildRecap } from "./recap.js";
 import { renderAdmin } from "./admin.js";
+import { bottleSVG, popCork, wasPopped, rememberPopped } from "./bottle.js";
 
 const app = $("#app");
 const headExtra = $("#headExtra");
@@ -104,7 +105,7 @@ async function renderCalendar() {
   if (!app.querySelector("#grid")) {
     app.innerHTML =
       '<div class="wrap" style="gap:22px">' +
-      '<p class="lede">24 Türchen voller Emoji-Rätsel zu Filmen und Serien, klassischer Worträtsel und schneller Foto- und Zeichen-Challenges 📸✏️. Was die anderen geantwortet oder gepostet haben, siehst du, sobald du selbst mitgemacht hast. Die Lösung gibt\'s immer am nächsten Tag, und am 24. wartet euer Rückblick als Video 🎬.</p>' +
+      '<p class="lede">Ab dem 1. Dezember geht jeden Tag ein Türchen auf. Mal ist es ein Rätsel, mal eine Foto- oder Zeichenaufgabe. Was die anderen geantwortet oder gepostet haben, siehst du, sobald du selbst mitgemacht hast. Die Lösung kommt jeweils am nächsten Tag, und am 24. gibt es ein Video.</p>' +
       '<div class="status"><span class="pill" id="progress">… / 24 erledigt</span>' +
       '<span class="pill preview" id="previewPill" hidden>👀 Vorschau: alles offen</span></div>' +
       '<div class="grid" id="grid"></div></div>';
@@ -126,20 +127,28 @@ function paintGrid() {
     const o = state.overview[day] || { day, kind: null, is_open: false, done: false };
     const open = o.is_open || state.preview;
     if (o.done) done++;
+    // Sektflasche: vergangene Tage sind schon offen, das heutige Türchen knallt beim ersten Öffnen.
+    const uncorked = o.is_revealed || o.done || (o.is_open && wasPopped(state.userId, day));
     const b = document.createElement("button");
     b.type = "button";
-    b.className = "door" + (day === 24 ? " big" : "") + (open ? "" : " locked") + (o.done ? " solved" : "");
+    b.className = "door" + (day === 24 ? " big" : "") + (open ? "" : " locked") +
+      (o.done ? " solved" : "") + (uncorked ? " uncorked" : open ? " ready" : "");
     b.style.setProperty("--c", colorFor(day));
     b.style.setProperty("--tilt", TILTS[day % TILTS.length] + "deg");
     const icon = KIND_ICON[o.kind];
-    if (o.done) {
-      b.innerHTML = '<span class="num">' + day + '</span><span class="emo">' + (o.kind === "foto" || o.kind === "zeichnen" ? "Gepostet ✔" : "Beantwortet ✔") + "</span>";
-      b.setAttribute("aria-label", "Türchen " + day + ", erledigt");
-    } else {
-      b.innerHTML = day + (icon ? '<span class="tag" aria-hidden="true">' + icon + "</span>" : "");
-      b.setAttribute("aria-label", "Türchen " + day + (open ? "" : ", noch verschlossen"));
-    }
-    b.addEventListener("click", () => openDoor(day));
+    b.innerHTML = bottleSVG(day) +
+      (icon ? '<span class="tag" aria-hidden="true">' + icon + "</span>" : "") +
+      (o.done ? '<span class="check" aria-hidden="true">✔</span>' : "");
+    b.setAttribute("aria-label", "Türchen " + day + (o.done ? ", erledigt" : open ? "" : ", noch verschlossen"));
+    b.addEventListener("click", async () => {
+      if (b.classList.contains("popping")) return;
+      if (open && !b.classList.contains("uncorked")) {
+        await popCork(b);
+        // Nur echte offene Tage merken, nicht die Admin-Vorschau
+        if (o.is_open) rememberPopped(state.userId, day);
+      }
+      openDoor(day);
+    });
     grid.appendChild(b);
   });
   $("#progress").textContent = done + " / 24 erledigt";
