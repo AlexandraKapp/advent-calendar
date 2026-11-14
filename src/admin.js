@@ -77,10 +77,14 @@ function doorEditor(day, d, s) {
   const fotos = document.createElement("div");
   fotos.className = "raten-admin";
   det.append(fotos);
-  let fotosLoaded = false;
-  det.addEventListener("toggle", () => {
-    if (det.open && f.kind.value === "raten" && !fotosLoaded) { fotosLoaded = true; ratenAdmin(day, fotos); }
-  });
+  let fotosLoaded = null;
+  const loadFotos = () => {
+    fotos.hidden = f.kind.value !== "raten" && f.kind.value !== "meme";
+    if (!det.open || fotos.hidden || fotosLoaded === f.kind.value) return;
+    fotosLoaded = f.kind.value;
+    (fotosLoaded === "raten" ? ratenAdmin : memeAdmin)(day, fotos);
+  };
+  det.addEventListener("toggle", loadFotos);
 
   function updateVisibility() {
     const kind = f.kind.value;
@@ -90,15 +94,11 @@ function doorEditor(day, d, s) {
       el.hidden = !(only === "riddle" ? isRiddle : only === "challenge" ? (kind === "foto" || kind === "zeichnen" || kind === "frei") : only === "zeichnen" ? (kind === "zeichnen" || kind === "spiel") : kind === only);
     });
     f.querySelector('[data-for="question"]').textContent =
-      kind === "wort" ? "Rätselfrage" : kind === "aufgabe" ? "Aufgabe (Antwort: genau 3 Emojis, keine Lösung)" : kind === "frage" ? "Frage (freie Antwort, keine Lösung)" : kind === "meme" ? "Text über dem Foto (Foto: Supabase-Speicher „tuerchen“, Datei <tag>.jpg)" : kind === "spiel" ? "Spielanleitung (leer = Standardtext)" : kind === "raten" ? "Text oben (die Fotos stehen unter dem Speichern-Knopf)" : kind === "emoji" ? "Frage (leer = „Welcher Film, welche Serie?“)" : kind === "rueckblick" ? "Text (wird nicht angezeigt)" : "Aufgabe";
+      kind === "wort" ? "Rätselfrage" : kind === "aufgabe" ? "Aufgabe (Antwort: genau 3 Emojis, keine Lösung)" : kind === "frage" ? "Frage (freie Antwort, keine Lösung)" : kind === "meme" ? "Text über dem Foto (das Foto steht unter dem Speichern-Knopf)" : kind === "spiel" ? "Spielanleitung (leer = Standardtext)" : kind === "raten" ? "Text oben (die Fotos stehen unter dem Speichern-Knopf)" : kind === "emoji" ? "Frage (leer = „Welcher Film, welche Serie?“)" : kind === "rueckblick" ? "Text (wird nicht angezeigt)" : "Aufgabe";
   }
-  f.kind.addEventListener("change", () => {
-    updateVisibility();
-    fotos.hidden = f.kind.value !== "raten";
-    if (!fotos.hidden && !fotosLoaded) { fotosLoaded = true; ratenAdmin(day, fotos); }
-  });
+  f.kind.addEventListener("change", () => { updateVisibility(); loadFotos(); });
   updateVisibility();
-  fotos.hidden = f.kind.value !== "raten";
+  fotos.hidden = f.kind.value !== "raten" && f.kind.value !== "meme";
 
   f.addEventListener("submit", async e => {
     e.preventDefault();
@@ -203,4 +203,43 @@ async function makeStages(file) {
     ctx.drawImage(bmp, 0, 0, c.width, c.height);
     return c.toDataURL("image/jpeg", quality[i]);
   });
+}
+
+// „Caption this“: das Foto des Tages ansehen und austauschen (Speicher „tuerchen“, Datei <tag>.jpg)
+async function memeAdmin(day, box) {
+  box.innerHTML =
+    "<h3>Foto</h3>" +
+    '<div class="meme-admin"><img alt="Foto zum Beschriften" hidden><p class="small" style="text-align:left">Lädt …</p></div>' +
+    '<label class="btn raten-file">📷 Foto austauschen<input type="file" accept="image/*" hidden></label>' +
+    '<p class="small" style="text-align:left">Das neue Foto ersetzt das alte sofort. Am besten als JPG.</p>';
+  const img = box.querySelector("img"), msg = box.querySelector(".meme-admin p"), input = box.querySelector("input");
+  async function show() {
+    const { data } = await sb.storage.from("tuerchen").createSignedUrl(day + ".jpg", 600);
+    if (data) { img.src = data.signedUrl + "&t=" + Date.now(); img.hidden = false; msg.hidden = true; }
+    else { img.hidden = true; msg.hidden = false; msg.textContent = "Noch kein Foto hochgeladen."; }
+  }
+  input.addEventListener("change", async () => {
+    const file = input.files[0];
+    if (!file) return;
+    msg.hidden = false; msg.textContent = "Wird hochgeladen …";
+    let blob;
+    try { blob = await toJpeg(file, 1600, 0.85); }
+    catch { msg.textContent = "Dieses Foto kann der Browser nicht lesen. Bitte als JPG oder PNG."; return; }
+    const { error } = await sb.storage.from("tuerchen").upload(day + ".jpg", blob, { upsert: true, contentType: "image/jpeg" });
+    input.value = "";
+    if (error) { msg.textContent = friendlyError(error); return; }
+    toast("Foto für Türchen " + day + " ausgetauscht ✔");
+    show();
+  });
+  show();
+}
+
+async function toJpeg(file, maxPx, q) {
+  const bmp = await createImageBitmap(file, { imageOrientation: "from-image" });
+  const k = Math.min(1, maxPx / Math.max(bmp.width, bmp.height));
+  const c = document.createElement("canvas");
+  c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k);
+  const ctx = c.getContext("2d"); ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(bmp, 0, 0, c.width, c.height);
+  return new Promise((ok, no) => c.toBlob(b => (b ? ok(b) : no(new Error("leer"))), "image/jpeg", q));
 }
