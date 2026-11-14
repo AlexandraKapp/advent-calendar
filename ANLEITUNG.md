@@ -69,15 +69,34 @@ Kontrolle: Auf <https://github.com/AlexandraKapp/advent-calendar> darf **kein** 
 
 ---
 
-## Teil 3: Auf Vercel online stellen
+## Teil 3: Automatisch online stellen (GitHub Action)
 
-1. Geh auf <https://vercel.com/new> und wähl dein Repo **advent-calendar** → **Import**.
-2. Framework: **Vite**. Das erkennt Vercel normalerweise selbst.
-3. Klapp **Environment Variables** auf und trag ein:
-   - `VITE_SUPABASE_URL` = deine Project URL
-   - `VITE_SUPABASE_ANON_KEY` = dein anon key
-4. Klick auf **Deploy**. Nach etwa einer Minute bekommst du eine Adresse wie `https://advent-calendar-xyz.vercel.app`.
-   Unter **Settings → Domains** kannst du sie kostenlos in etwas Schöneres ändern, z. B. `brunchies-advent.vercel.app`.
+Bei jedem Push auf `main` läuft die Pipeline `.github/workflows/deploy.yml` auf GitHub:
+
+1. **Datenbank:** Neue Dateien in `supabase/migrations/` werden zu Supabase hochgeladen.
+2. **Webseite:** Danach wird die App gebaut und auf Vercel veröffentlicht (`https://brunchies-advent.vercel.app`).
+
+Rätsel und Lösungen laufen **nicht** durch die Pipeline. Sie bleiben nur in der Datenbank.
+Den Fortschritt siehst du auf GitHub unter **Actions**. Dort kannst du die Pipeline mit **Run workflow** auch von Hand starten.
+
+### 3.0 Einmalig: Vercel-Projekt und Werte
+- Vercel-Projekt `brunchies-advent` anlegen (`vercel project add brunchies-advent`).
+- Die automatischen Git-Deployments von Vercel sind in `vercel.json` ausgeschaltet. So veröffentlicht nur die Pipeline, und zwar erst nach der Datenbank.
+- Unter GitHub → **Settings → Secrets and variables → Actions → Variables** stehen diese Werte (nicht geheim):
+  `SUPABASE_PROJECT_REF`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`
+  (die beiden Vercel-IDs stehen nach `vercel link` in `.vercel/project.json`).
+
+### 3.0.1 Einmalig: zwei geheime Schlüssel (machst du selbst)
+1. **Supabase-Token:** <https://supabase.com/dashboard/account/tokens> → **Generate new token** (Name z. B. `github-deploy`) → kopieren.
+   Im Terminal einfügen, wenn danach gefragt wird:
+   ```bash
+   /opt/homebrew/bin/gh secret set SUPABASE_ACCESS_TOKEN -R AlexandraKapp/advent-calendar
+   ```
+2. **Vercel-Token:** <https://vercel.com/account/settings/tokens> → **Create** (Name `github-deploy`, Scope: dein Konto) → kopieren.
+   ```bash
+   /opt/homebrew/bin/gh secret set VERCEL_TOKEN -R AlexandraKapp/advent-calendar
+   ```
+Die Tokens sind wie Passwörter: Sie gehören in kein Chatfenster und in keine Datei.
 
 ### 3.1 Supabase die Adresse verraten
 Sonst führt der Link in der Mail ins Leere.

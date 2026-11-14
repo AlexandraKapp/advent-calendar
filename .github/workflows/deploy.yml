@@ -1,0 +1,60 @@
+# Bei jedem Push auf main:
+#   1. Datenbank-Änderungen (supabase/migrations) zu Supabase hochladen
+#   2. danach die Webseite bauen und auf Vercel veröffentlichen
+# Die Reihenfolge ist wichtig: Die neue Webseite soll nie auf eine alte Datenbank treffen.
+#
+# Benötigt in GitHub → Settings → Secrets and variables → Actions:
+#   Secrets:   SUPABASE_ACCESS_TOKEN, VERCEL_TOKEN
+#   Variables: SUPABASE_PROJECT_REF, VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY,
+#              VERCEL_ORG_ID, VERCEL_PROJECT_ID
+# Rätsel und Lösungen laufen NICHT über diese Pipeline, die bleiben nur in der Datenbank.
+
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: # erlaubt den Knopf „Run workflow“ auf GitHub
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  supabase:
+    name: Datenbank (Supabase)
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.109.1
+      - name: Projekt verknüpfen
+        run: supabase link --project-ref "${{ vars.SUPABASE_PROJECT_REF }}" < /dev/null
+      - name: Neue Migrationen einspielen
+        run: supabase db push < /dev/null
+
+  vercel:
+    name: Webseite (Vercel)
+    needs: supabase
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+      VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24 # muss zur Node-Version im Vercel-Projekt passen
+      - name: Vercel CLI installieren
+        run: npm install --global vercel@58.7.1
+      - name: Projekt-Einstellungen holen
+        run: vercel pull --yes --environment=production --token="${{ secrets.VERCEL_TOKEN }}"
+      - name: Bauen
+        run: vercel build --prod --token="${{ secrets.VERCEL_TOKEN }}"
+      - name: Veröffentlichen
+        run: vercel deploy --prebuilt --prod --token="${{ secrets.VERCEL_TOKEN }}"

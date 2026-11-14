@@ -37,7 +37,7 @@ Kostenlos für eine Gruppe von 10 bis 20 Leuten:
 
 - **[Vite](https://vite.dev)** mit schlichtem HTML, CSS und JavaScript, ohne Framework
 - **[Supabase](https://supabase.com)**: Postgres-Datenbank, Login per Magic Link, Bilder-Speicher
-- **[Vercel](https://vercel.com)**: Hosting; jede Änderung auf GitHub geht automatisch online
+- **[Vercel](https://vercel.com)**: Hosting; eine GitHub Action bringt jede Änderung auf `main` automatisch online
 
 ```
 index.html              Grundgerüst der Seite
@@ -53,6 +53,7 @@ src/
 supabase/
   migrations/           Datenbank-Tabellen und Sicherheitsregeln
   templates/            Login-Mail auf Deutsch
+.github/workflows/      Pipeline: bei Push auf main erst Supabase, dann Vercel
 private/                (nicht im Repo) Türchen-Inhalte und Lösungen
 ```
 
