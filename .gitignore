@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.env
+.env.local
+.DS_Store
+# Hier liegen Rätsel und Lösungen. NIEMALS hochladen (das Repo ist öffentlich)!
+private/
+supabase/.branches
+supabase/.temp
