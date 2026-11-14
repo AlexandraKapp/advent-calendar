@@ -74,6 +74,13 @@ function doorEditor(day, d, s) {
       '<p class="small" style="text-align:left">Groß/klein, Leerzeichen und Umlaute sind egal. Begriffe ab 4 Buchstaben dürfen irgendwo in der Antwort stehen („schirm“ passt zu „ein Regenschirm“), kürzere müssen genau passen.</p></div>' +
     '<button class="btn" type="submit">💾 Speichern</button>';
   det.append(f);
+  const fotos = document.createElement("div");
+  fotos.className = "raten-admin";
+  det.append(fotos);
+  let fotosLoaded = false;
+  det.addEventListener("toggle", () => {
+    if (det.open && f.kind.value === "raten" && !fotosLoaded) { fotosLoaded = true; ratenAdmin(day, fotos); }
+  });
 
   function updateVisibility() {
     const kind = f.kind.value;
@@ -83,10 +90,15 @@ function doorEditor(day, d, s) {
       el.hidden = !(only === "riddle" ? isRiddle : only === "challenge" ? (kind === "foto" || kind === "zeichnen" || kind === "frei") : only === "zeichnen" ? (kind === "zeichnen" || kind === "spiel") : kind === only);
     });
     f.querySelector('[data-for="question"]').textContent =
-      kind === "wort" ? "Rätselfrage" : kind === "aufgabe" ? "Aufgabe (Antwort: genau 3 Emojis, keine Lösung)" : kind === "frage" ? "Frage (freie Antwort, keine Lösung)" : kind === "meme" ? "Text über dem Foto (Foto: Supabase-Speicher „tuerchen“, Datei <tag>.jpg)" : kind === "spiel" ? "Spielanleitung (leer = Standardtext)" : kind === "raten" ? "Text oben (Fotos und Namen kommen über tools/wer-ist-das.swift)" : kind === "emoji" ? "Frage (leer = „Welcher Film, welche Serie?“)" : kind === "rueckblick" ? "Text (wird nicht angezeigt)" : "Aufgabe";
+      kind === "wort" ? "Rätselfrage" : kind === "aufgabe" ? "Aufgabe (Antwort: genau 3 Emojis, keine Lösung)" : kind === "frage" ? "Frage (freie Antwort, keine Lösung)" : kind === "meme" ? "Text über dem Foto (Foto: Supabase-Speicher „tuerchen“, Datei <tag>.jpg)" : kind === "spiel" ? "Spielanleitung (leer = Standardtext)" : kind === "raten" ? "Text oben (die Fotos stehen unter dem Speichern-Knopf)" : kind === "emoji" ? "Frage (leer = „Welcher Film, welche Serie?“)" : kind === "rueckblick" ? "Text (wird nicht angezeigt)" : "Aufgabe";
   }
-  f.kind.addEventListener("change", updateVisibility);
+  f.kind.addEventListener("change", () => {
+    updateVisibility();
+    fotos.hidden = f.kind.value !== "raten";
+    if (!fotos.hidden && !fotosLoaded) { fotosLoaded = true; ratenAdmin(day, fotos); }
+  });
   updateVisibility();
+  fotos.hidden = f.kind.value !== "raten";
 
   f.addEventListener("submit", async e => {
     e.preventDefault();
@@ -112,4 +124,83 @@ function doorEditor(day, d, s) {
     toast("Türchen " + day + " gespeichert ✔");
   });
   return det;
+}
+
+// „Wer ist das?“: Fotos ansehen, Namen ändern, austauschen, hinzufügen, löschen
+async function ratenAdmin(day, box) {
+  box.innerHTML = '<h3>Fotos</h3><p class="small" style="text-align:left">Lädt …</p>';
+  const { data, error } = await sb.rpc("raten_admin_list", { d: day });
+  if (error) { box.innerHTML = '<p class="small">Fotos konnten nicht geladen werden.</p>'; return; }
+  box.innerHTML = '<h3>Fotos (' + data.length + ')</h3>' +
+    '<p class="small" style="text-align:left">Die Reihenfolge hier ist die Reihenfolge im Spiel. Weitere Schreibweisen mit Komma trennen. ' +
+    "Neue Fotos am besten als JPG; das Foto wird für das Spiel automatisch verkleinert und unscharf gemacht.</p>";
+  const reload = () => ratenAdmin(day, box);
+  data.forEach(r => box.append(ratenCard(day, r, reload)));
+  if (data.length < 20) box.append(ratenCard(day, null, reload));
+}
+
+function ratenCard(day, r, reload) {
+  const card = document.createElement("form");
+  card.className = "raten-card" + (r ? "" : " new");
+  card.innerHTML =
+    '<div class="raten-thumb">' + (r ? '<img alt="">' : "<span>➕</span>") + "</div>" +
+    '<div class="stack">' +
+      "<b>" + (r ? "Foto " + r.nr : "Neues Foto") + "</b>" +
+      '<input type="text" name="sol" placeholder="Name" value="' + esc(r ? r.solution : "") + '">' +
+      '<input type="text" name="acc" placeholder="Andere Schreibweisen (Komma)" value="' + esc(r ? (r.accepted || []).filter(a => a !== r.solution).join(", ") : "") + '">' +
+      '<label class="linkbtn raten-file">' + (r ? "📷 Foto austauschen" : "📷 Foto auswählen") + '<input type="file" name="file" accept="image/*" hidden></label>' +
+      '<span class="small raten-chosen"></span>' +
+      '<div class="raten-btns"><button class="btn small-btn" type="submit">' + (r ? "Speichern" : "Hinzufügen") + "</button>" +
+      (r ? '<button class="linkbtn" type="button" name="del">Löschen</button>' : "") + "</div>" +
+    "</div>";
+  if (r) card.querySelector("img").src = r.bild;
+  let stages = null;
+  card.file.addEventListener("change", async () => {
+    const file = card.file.files[0];
+    if (!file) return;
+    card.querySelector(".raten-chosen").textContent = "Wird vorbereitet …";
+    try {
+      stages = await makeStages(file);
+      const thumb = card.querySelector(".raten-thumb");
+      thumb.innerHTML = '<img alt="">'; thumb.querySelector("img").src = stages[4];
+      card.querySelector(".raten-chosen").textContent = "Neues Foto gewählt – jetzt " + (r ? "speichern" : "hinzufügen") + ".";
+    } catch {
+      stages = null;
+      card.querySelector(".raten-chosen").textContent = "Dieses Foto kann der Browser nicht lesen. Bitte als JPG oder PNG.";
+    }
+  });
+  card.addEventListener("submit", async e => {
+    e.preventDefault();
+    const sol = card.sol.value.trim();
+    if (!sol) { toast("Bitte einen Namen eintragen"); return; }
+    if (!r && !stages) { toast("Bitte erst ein Foto auswählen"); return; }
+    const acc = card.acc.value.split(",").map(x => x.trim()).filter(Boolean);
+    const btn = card.querySelector("button[type=submit]"); btn.disabled = true;
+    const { error } = await sb.rpc("raten_admin_save", { d: day, n: r ? r.nr : null, sol, acc, st: stages });
+    btn.disabled = false;
+    if (error) { toast(friendlyError(error)); return; }
+    toast(r ? "Foto " + r.nr + " gespeichert ✔" : "Foto hinzugefügt ✔");
+    reload();
+  });
+  if (r) card.querySelector('[name="del"]').addEventListener("click", async () => {
+    if (!confirm("Foto " + r.nr + " (" + r.solution + ") löschen? Die Fotos dahinter rücken auf.")) return;
+    const { error } = await sb.rpc("raten_admin_delete", { d: day, n: r.nr });
+    if (error) toast(friendlyError(error)); else { toast("Gelöscht"); reload(); }
+  });
+  return card;
+}
+
+// 5 Stufen wie in tools/wer-ist-das.swift: winzige Bilder wirken groß gezogen unscharf
+async function makeStages(file) {
+  const bmp = await createImageBitmap(file, { imageOrientation: "from-image" });
+  const sizes = [14, 26, 50, 100, 900], quality = [0.7, 0.7, 0.75, 0.75, 0.8];
+  return sizes.map((px, i) => {
+    const k = Math.min(1, px / Math.max(bmp.width, bmp.height));
+    const c = document.createElement("canvas");
+    c.width = Math.max(1, Math.round(bmp.width * k)); c.height = Math.max(1, Math.round(bmp.height * k));
+    const ctx = c.getContext("2d");
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(bmp, 0, 0, c.width, c.height);
+    return c.toDataURL("image/jpeg", quality[i]);
+  });
 }
