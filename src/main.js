@@ -2,7 +2,7 @@ import "./style.css";
 import { sb } from "./supabase.js";
 import { state } from "./state.js";
 import { renderLogin, renderName } from "./auth.js";
-import { $, esc, colorFor, TILTS, KIND_ICON, KIND_LABEL, openDialog, closeDialog, toast } from "./ui.js";
+import { $, esc, colorFor, TILTS, KIND_LABEL, openDialog, closeDialog, toast } from "./ui.js";
 import { buildRiddle } from "./riddle.js";
 import { buildChallenge } from "./challenge.js";
 import { buildRecap } from "./recap.js";
@@ -105,7 +105,7 @@ async function renderCalendar() {
   if (!app.querySelector("#grid")) {
     app.innerHTML =
       '<div class="wrap" style="gap:22px">' +
-      '<p class="lede">Ab dem 1. Dezember geht jeden Tag ein Türchen auf. Mal ist es ein Rätsel, mal eine Foto- oder Zeichenaufgabe. Was die anderen geantwortet oder gepostet haben, siehst du, sobald du selbst mitgemacht hast. Die Lösung kommt jeweils am nächsten Tag, und am 24. gibt es ein Video.</p>' +
+      '<p class="lede">Ab dem 1. Dezember geht jeden Tag ein Türchen auf. Mal ist es ein Rätsel, mal eine Foto- oder Zeichenaufgabe. Was die anderen geantwortet oder gepostet haben, siehst du, sobald du selbst mitgemacht hast. Die Lösung kommt jeweils am nächsten Tag.</p>' +
       '<div class="status"><span class="pill" id="progress">… / 24 erledigt</span>' +
       '<span class="pill preview" id="previewPill" hidden>👀 Vorschau: alles offen</span></div>' +
       '<div class="grid" id="grid"></div></div>';
@@ -135,9 +135,8 @@ function paintGrid() {
       (o.done ? " solved" : "") + (uncorked ? " uncorked" : open ? " ready" : "");
     b.style.setProperty("--c", colorFor(day));
     b.style.setProperty("--tilt", TILTS[day % TILTS.length] + "deg");
-    const icon = KIND_ICON[o.kind];
+    // Keine Typ-Icons: Was hinter einem Türchen steckt, bleibt bis zum Öffnen eine Überraschung.
     b.innerHTML = bottleSVG(day) +
-      (icon ? '<span class="tag" aria-hidden="true">' + icon + "</span>" : "") +
       (o.done ? '<span class="check" aria-hidden="true">✔</span>' : "");
     b.setAttribute("aria-label", "Türchen " + day + (o.done ? ", erledigt" : open ? "" : ", noch verschlossen"));
     b.addEventListener("click", async () => {

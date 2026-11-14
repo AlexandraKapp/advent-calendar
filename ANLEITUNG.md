@@ -144,17 +144,6 @@ Schick der Gruppe einfach den Link, z. B. per WhatsApp:
 - Lag jemand „fast richtig“? Nach der Auflösung siehst du als Admin bei jeder Antwort ✔ / ✘ / auto und kannst die Bewertung von Hand ändern.
 - Typ ändern geht jederzeit: Emoji-Rätsel, Worträtsel, Foto-Challenge, Zeichen-Challenge, Rückblick (Tür 24).
 
-## Video für Tür 24
-
-Das Video liegt **nicht** auf GitHub, sondern im geschützten Supabase-Speicher `videos`.
-Angemeldete können es ab dem 24. Dezember abrufen, Admins schon vorher.
-
-Video austauschen (Datei muss MP4 mit H.264 sein, höchstens 50 MB):
-```bash
-/opt/homebrew/bin/supabase storage cp private/rueckblick-2026.mp4 ss:///videos/rueckblick-2026.mp4 --content-type video/mp4 --linked --experimental
-```
-Oder im Supabase-Dashboard: **Storage → videos** → Datei `rueckblick-2026.mp4` ersetzen.
-
 ## Lokal ausprobieren (optional, für Technik-Neugierige)
 
 Voraussetzung: Docker Desktop läuft.

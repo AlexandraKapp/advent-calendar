@@ -8,7 +8,6 @@ export const KIND_LABEL = {
   emoji: "Emoji-Rätsel", wort: "Worträtsel", foto: "Foto-Challenge",
   zeichnen: "Zeichen-Challenge", rueckblick: "Rückblick",
 };
-export const KIND_ICON = { foto: "📸", zeichnen: "✏️", rueckblick: "🎬" };
 
 export function esc(s) {
   return String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
