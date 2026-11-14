@@ -1,3 +1,4 @@
+import { state } from "./state.js";
 // Sektflaschen als Türchen: Zeichnung, Korken-Knall und Merken, welche Flasche schon offen ist.
 
 // Die Flasche als SVG. Das Etikett bekommt die Türchen-Farbe (--c), die Zahl steht darauf.
@@ -26,15 +27,17 @@ export function bottleSVG(day) {
 }
 
 // ---------- Merken, welche Flaschen schon geknallt haben (nur Komfort, pro Gerät) ----------
+// Nach einem Admin-Reset zählt nur, was danach geknallt hat (reset_at steckt im Schlüssel)
 const KEY = "brunchies-korken";
+const keyFor = userId => KEY + ":" + userId + (state.resetAt ? ":" + state.resetAt : "");
 function readPopped(userId) {
-  try { return JSON.parse(localStorage.getItem(KEY + ":" + userId) || "[]"); } catch { return []; }
+  try { return JSON.parse(localStorage.getItem(keyFor(userId)) || "[]"); } catch { return []; }
 }
 export function wasPopped(userId, day) { return readPopped(userId).includes(day); }
 export function rememberPopped(userId, day) {
   try {
     const list = readPopped(userId);
-    if (!list.includes(day)) { list.push(day); localStorage.setItem(KEY + ":" + userId, JSON.stringify(list)); }
+    if (!list.includes(day)) { list.push(day); localStorage.setItem(keyFor(userId), JSON.stringify(list)); }
   } catch { /* privater Modus o. ä.: dann knallt es eben beim nächsten Mal noch einmal */ }
 }
 

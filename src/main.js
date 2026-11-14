@@ -36,10 +36,12 @@ async function route() {
 
     state.userId = session.user.id;
     if (!state.profile || state.profile.id !== state.userId) {
-      const [{ data: profile }, { data: isAdmin }] = await Promise.all([
+      const [{ data: profile }, { data: isAdmin }, { data: settings }] = await Promise.all([
         sb.from("profiles").select("*").eq("id", state.userId).maybeSingle(),
         sb.rpc("is_admin"),
+        sb.from("app_settings").select("reset_at").maybeSingle(),
       ]);
+      state.resetAt = settings ? settings.reset_at : "";
       state.profile = profile;
       state.isAdmin = !!isAdmin;
     }

@@ -45,6 +45,7 @@ export async function renderAdmin(app) {
     ul.append(li);
   });
   root.append(ul);
+  root.append(resetBox());
   app.innerHTML = "";
   app.append(root);
 }
@@ -242,4 +243,49 @@ async function toJpeg(file, maxPx, q) {
   const ctx = c.getContext("2d"); ctx.imageSmoothingQuality = "high";
   ctx.drawImage(bmp, 0, 0, c.width, c.height);
   return new Promise((ok, no) => c.toBlob(b => (b ? ok(b) : no(new Error("leer"))), "image/jpeg", q));
+}
+
+// Nach dem Testen: alles auf 0 (Antworten, Fotos/Zeichnungen, Zulosungen, Spielstände, geknallte Korken)
+function resetBox() {
+  const box = document.createElement("div");
+  box.className = "reset-box";
+  box.innerHTML =
+    "<h2>Zurücksetzen</h2>" +
+    '<p class="small" style="text-align:left">Löscht alle Antworten, hochgeladenen Fotos und Zeichnungen, Zulosungen bei {person} und Spielstände. ' +
+    "Alle Flaschen sind danach wieder zu. Türchen, Lösungen, Fotos für die Rätsel und die Leute bleiben. Das lässt sich nicht rückgängig machen.</p>" +
+    '<button class="btn danger" type="button">🧹 Alles zurücksetzen</button>';
+  const btn = box.querySelector("button");
+  btn.addEventListener("click", async () => {
+    const word = prompt("Wirklich alles löschen? Dann tippe RESET ein.");
+    if ((word || "").trim().toUpperCase() !== "RESET") { toast("Nichts gelöscht"); return; }
+    btn.disabled = true; btn.textContent = "Wird zurückgesetzt …";
+    // Erst die Dateien im Speicher löschen, dann die Einträge in der Datenbank
+    let error = null;
+    const paths = [];
+    try { await collectFiles("", paths); } catch (e) { error = e; }
+    for (let i = 0; !error && i < paths.length; i += 100) {
+      ({ error } = await sb.storage.from("posts").remove(paths.slice(i, i + 100)));
+    }
+    if (!error) ({ error } = await sb.rpc("admin_reset"));
+    btn.disabled = false; btn.textContent = "🧹 Alles zurücksetzen";
+    if (error) { toast(friendlyError(error)); return; }
+    const { data: settings } = await sb.from("app_settings").select("reset_at").maybeSingle();
+    if (settings) state.resetAt = settings.reset_at;
+    toast("Alles zurückgesetzt ✔");
+  });
+  return box;
+}
+
+// Alle Dateien im Speicher „posts“ einsammeln (Ordner: Tag/Person/Datei)
+async function collectFiles(prefix, out) {
+  for (let offset = 0; ; offset += 1000) {
+    const { data, error } = await sb.storage.from("posts").list(prefix, { limit: 1000, offset });
+    if (error) throw error;
+    for (const item of data) {
+      const path = prefix ? prefix + "/" + item.name : item.name;
+      if (item.id) out.push(path);            // Datei
+      else await collectFiles(path, out);     // Ordner
+    }
+    if (data.length < 1000) return;
+  }
 }

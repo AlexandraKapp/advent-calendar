@@ -280,6 +280,8 @@ textarea { resize: vertical; min-height: 64px; }
 .admin form { display: grid; gap: 10px; padding: 0 14px 14px; flex-direction: column; }
 .admin .two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .admin h2 { font-family: var(--display); font-weight: 400; margin: 6px 0 0; font-size: 1.4rem; }
+.reset-box { display: grid; gap: 10px; margin-top: 10px; }
+.btn.danger { background: #b3261e; color: #fff; }
 .raten-admin { display: grid; gap: 10px; padding: 0 14px 14px; }
 .raten-admin[hidden] { display: none; }
 .meme-admin img { display: block; max-width: 100%; max-height: 320px; border: 3px solid var(--ink); border-radius: 10px; }
