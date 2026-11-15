@@ -70,9 +70,9 @@ function doorEditor(day, d, s) {
       '<p class="small" style="text-align:left">Tipp: Schreib <b>{person}</b> in die Aufgabe, z. B. „Stelle {person} auf einem Foto nach.“ Dann bekommt jede Person beim Öffnen jemand anderen aus der Gruppe zugelost.</p></div>' +
     '<div class="stack" data-only="challenge"><label class="lbl">Kurztitel fürs Rückblick-Video</label><input type="text" name="short" value="' + esc(d.short) + '"></div>' +
     '<div class="stack" data-only="zeichnen"><label class="lbl">Sekunden (Zeichnen / Spiel)</label><input type="number" name="seconds" min="3" max="600" value="' + (d.seconds ?? 30) + '"></div>' +
-    '<div class="stack" data-only="riddle"><label class="lbl">Lösung (wird am Folgetag angezeigt)</label><input type="text" name="solution" value="' + esc(s.solution) + '"></div>' +
-    '<div class="stack" data-only="riddle"><label class="lbl">Gilt als richtig (mit Komma getrennt)</label><input type="text" name="accepted" value="' + esc((s.accepted || []).join(", ")) + '">' +
-      '<p class="small" style="text-align:left">Groß/klein, Leerzeichen und Umlaute sind egal. Begriffe ab 4 Buchstaben dürfen irgendwo in der Antwort stehen („schirm“ passt zu „ein Regenschirm“), kürzere müssen genau passen.</p></div>' +
+    '<div class="stack" data-only="riddle"><label class="lbl" data-for="solution">Lösung (wird am Folgetag angezeigt)</label><input type="text" name="solution" value="' + esc(s.solution) + '"></div>' +
+    '<div class="stack" data-only="riddle"><label class="lbl" data-for="accepted">Gilt als richtig (mit Komma getrennt)</label><input type="text" name="accepted" value="' + esc((s.accepted || []).join(", ")) + '">' +
+      '<p class="small" data-for="acchint" style="text-align:left">Groß/klein, Leerzeichen und Umlaute sind egal. Begriffe ab 4 Buchstaben dürfen irgendwo in der Antwort stehen („schirm“ passt zu „ein Regenschirm“), kürzere müssen genau passen.</p></div>' +
     '<button class="btn" type="submit">💾 Speichern</button>';
   det.append(f);
   const fotos = document.createElement("div");
@@ -89,13 +89,16 @@ function doorEditor(day, d, s) {
 
   function updateVisibility() {
     const kind = f.kind.value;
-    const isRiddle = kind === "emoji" || kind === "wort";
+    const isRiddle = kind === "emoji" || kind === "wort" || kind === "schaetzen";
+    f.querySelector('[data-for="solution"]').textContent = kind === "schaetzen" ? "Auflösung (Text, wird am Folgetag angezeigt)" : "Lösung (wird am Folgetag angezeigt)";
+    f.querySelector('[data-for="accepted"]').textContent = kind === "schaetzen" ? "Richtige Zahl (für die Rangliste)" : "Gilt als richtig (mit Komma getrennt)";
+    f.querySelector('[data-for="acchint"]').hidden = kind === "schaetzen";
     f.querySelectorAll("[data-only]").forEach(el => {
       const only = el.dataset.only;
       el.hidden = !(only === "riddle" ? isRiddle : only === "challenge" ? (kind === "foto" || kind === "zeichnen" || kind === "frei") : only === "zeichnen" ? (kind === "zeichnen" || kind === "spiel") : kind === only);
     });
     f.querySelector('[data-for="question"]').textContent =
-      kind === "wort" ? "Rätselfrage" : kind === "aufgabe" ? "Aufgabe (Antwort: genau 3 Emojis, keine Lösung)" : kind === "frage" ? "Frage (freie Antwort, keine Lösung)" : kind === "meme" ? "Text über dem Foto (das Foto steht unter dem Speichern-Knopf)" : kind === "spiel" ? "Spielanleitung (leer = Standardtext)" : kind === "raten" ? "Text oben (die Fotos stehen unter dem Speichern-Knopf)" : kind === "emoji" ? "Frage (leer = „Welcher Film, welche Serie?“)" : kind === "rueckblick" ? "Text (wird nicht angezeigt)" : "Aufgabe";
+      kind === "wort" ? "Rätselfrage" : kind === "aufgabe" ? "Aufgabe (Antwort: genau 3 Emojis, keine Lösung)" : kind === "frage" ? "Frage (freie Antwort, keine Lösung)" : kind === "schaetzen" ? "Schätzfrage (Antwort ist eine Zahl)" : kind === "meme" ? "Text über dem Foto (das Foto steht unter dem Speichern-Knopf)" : kind === "spiel" ? "Spielanleitung (leer = Standardtext)" : kind === "raten" ? "Text oben (die Fotos stehen unter dem Speichern-Knopf)" : kind === "emoji" ? "Frage (leer = „Welcher Film, welche Serie?“)" : kind === "rueckblick" ? "Text (wird nicht angezeigt)" : "Aufgabe";
   }
   f.kind.addEventListener("change", () => { updateVisibility(); loadFotos(); });
   updateVisibility();
@@ -114,8 +117,11 @@ function doorEditor(day, d, s) {
     };
     const btn = f.querySelector("button[type=submit]"); btn.disabled = true;
     let { error } = await sb.from("doors").upsert(row);
-    if (!error && (kind === "emoji" || kind === "wort")) {
-      const accepted = f.accepted.value.split(",").map(x => x.trim()).filter(Boolean);
+    if (!error && (kind === "emoji" || kind === "wort" || kind === "schaetzen")) {
+      // Bei der Schätzfrage ist „Richtige Zahl“ genau eine Zahl (Komma = Dezimalkomma)
+      const accepted = kind === "schaetzen"
+        ? [f.accepted.value.trim().replace(",", ".")].filter(Boolean)
+        : f.accepted.value.split(",").map(x => x.trim()).filter(Boolean);
       ({ error } = await sb.from("door_solutions").upsert({ day, solution: f.solution.value.trim(), accepted }));
     }
     btn.disabled = false;

@@ -10,17 +10,18 @@ export async function buildRiddle({ day, door, body, overview }) {
   const isTask = door.kind === "aufgabe" || door.kind === "frage" || door.kind === "meme";
   const isMeme = door.kind === "meme";
   const isEmojiTask = door.kind === "aufgabe";
+  // Schätzfrage: Antwort ist eine Zahl; nach der Auflösung gewinnt, wer am nächsten dran ist
+  const isGuess = door.kind === "schaetzen";
+  let target = null;
   const personal = isPersonal(door.question);
-  // Admin-Vorschau: Lösung schon vorher zeigen
-  const showSolution = revealed || (state.isAdmin && state.preview);
 
   body.innerHTML =
     (isMeme
       ? '<p class="question" id="task"></p><figure class="meme" id="memeMain"><img id="memeImg" alt="Foto zum Beschriften"></figure>'
       : isTask
       ? '<div class="emoji small">' + esc(door.emoji) + '</div><p class="question" id="task"></p>'
-      : door.kind === "wort"
-      ? '<p class="question">' + esc(door.question) + "</p>"
+      : door.kind === "wort" || isGuess
+      ? (isGuess ? '<div class="emoji small">' + esc(door.emoji) + "</div>" : "") + '<p class="question">' + esc(door.question) + "</p>"
       : '<div class="emoji" aria-label="Emoji-Rätsel">' + esc(door.emoji) + "</div>" +
         '<p class="ask">' + esc(door.question || "Welcher Film, welche Serie?") + "</p>") +
     '<p class="solution" id="solution" hidden></p>' +
@@ -28,11 +29,11 @@ export async function buildRiddle({ day, door, body, overview }) {
       '<form id="answerForm"><label for="answer" class="sr">Deine Antwort</label>' +
       (door.kind === "frage"
         ? '<textarea id="answer" maxlength="300" rows="3" placeholder="Deine Antwort"></textarea>'
-        : '<input type="text" id="answer" maxlength="120" autocomplete="off" placeholder="' + (isEmojiTask ? "Deine 3 Emojis" : isMeme ? "Deine Caption" : "Deine Antwort") + '"' + (isEmojiTask ? ' class="emoji-input"' : "") + ">") +
+        : '<input type="text" id="answer" maxlength="120" autocomplete="off" placeholder="' + (isEmojiTask ? "Deine 3 Emojis" : isMeme ? "Deine Caption" : isGuess ? "Deine Schätzung (Zahl)" : "Deine Antwort") + '"' + (isEmojiTask ? ' class="emoji-input"' : isGuess ? ' inputmode="decimal"' : "") + ">") +
       '<button class="btn" type="submit" id="sendBtn">Abschicken</button></form>' +
-      '<p class="note-inline">' + (isTask ? "Bis morgen um 0:00 kannst du deine Antwort noch ändern." : "Die Lösung gibt es morgen um 0:00. Bis dahin kannst du deine Antwort noch ändern.") + "</p>") +
+      '<p class="note-inline">' + (isTask ? "Bis morgen um 0:00 kannst du deine Antwort noch ändern." : isGuess ? "Die Auflösung gibt es morgen um 0:00. Bis dahin kannst du deine Schätzung noch ändern." : "Die Lösung gibt es morgen um 0:00. Bis dahin kannst du deine Antwort noch ändern.") + "</p>") +
     '<p class="feedback" id="feedback" aria-live="polite"></p>' +
-    '<div class="gallery-head"><h3>' + (isMeme ? "Captions" : "Antworten") + '</h3><span id="gcount"></span></div>' +
+    '<div class="gallery-head"><h3>' + (isMeme ? "Captions" : isGuess ? "Schätzungen" : "Antworten") + '</h3><span id="gcount"></span></div>' +
     '<ul class="answers" id="answers"><li class="note">Lädt …</li></ul>';
 
   const fb = $("#feedback", body);
@@ -50,13 +51,13 @@ export async function buildRiddle({ day, door, body, overview }) {
     else $("#memeMain", body).hidden = true;
   }
 
-  if (showSolution) {
-    const { data: sol } = await sb.from("door_solutions").select("solution").eq("day", day).maybeSingle();
+  if (revealed) {
+    const { data: sol } = await sb.from("door_solutions").select("solution, accepted").eq("day", day).maybeSingle();
+    if (isGuess && sol && sol.accepted && sol.accepted.length) target = toNumber(sol.accepted[0]);
     if (sol && sol.solution) {
       const el = $("#solution", body);
-      el.innerHTML = (revealed ? "" : "👀 Nur in der Vorschau: ") + "Lösung: <b>" + esc(sol.solution) + "</b>";
+      el.innerHTML = "Lösung: <b>" + esc(sol.solution) + "</b>";
       el.hidden = false;
-      if (!revealed) el.className = "hint";
     }
   }
 
@@ -83,17 +84,29 @@ export async function buildRiddle({ day, door, body, overview }) {
     }
     if (!rows.length) { list.innerHTML = '<li class="note">Niemand hat geantwortet.</li>'; return; }
 
-    // Eigene Antwort zuerst
-    rows.sort((a, b) => (b.is_me ? 1 : 0) - (a.is_me ? 1 : 0));
+    // Eigene Antwort zuerst; bei der Schätzfrage nach der Auflösung: wer am nächsten dran ist
+    if (isGuess && target !== null) {
+      const off = r => { const n = toNumber(r.answer); return n === null ? Infinity : Math.round(Math.abs(n - target) * 1e6) / 1e6; };
+      rows.sort((a, b) => off(a) - off(b));
+      let rank = 0, last = null;
+      rows.forEach((r, i) => { const o = off(r); if (o !== last) { rank = i + 1; last = o; } r.rank = rank; r.off = o; });
+    } else rows.sort((a, b) => (b.is_me ? 1 : 0) - (a.is_me ? 1 : 0));
     rows.forEach(r => {
       const li = document.createElement("li");
-      const marked = !isTask && r.correct !== null && r.correct !== undefined;
+      const marked = !isTask && !isGuess && r.correct !== null && r.correct !== undefined;
       if (marked) li.className = r.correct ? "right" : "wrong";
       const who = document.createElement("b");
-      who.textContent = (r.is_me ? "Du" : r.name) + (targetOf[r.user_id] ? " → " + targetOf[r.user_id] : "");
+      who.textContent = (r.rank ? (["🥇", "🥈", "🥉"][r.rank - 1] || r.rank + ".") + " " : "") +
+        (r.is_me ? "Du" : r.name) + (targetOf[r.user_id] ? " → " + targetOf[r.user_id] : "");
       const txt = document.createElement("span"); txt.textContent = r.answer;
       if (isEmojiTask) txt.className = "emoji-answer";
       li.append(who, txt);
+      if (r.rank && r.off !== Infinity) {
+        const d = document.createElement("small");
+        d.className = "off";
+        d.textContent = r.off === 0 ? "genau richtig!" : fmt(r.off) + " daneben";
+        li.append(d);
+      }
       if (marked) {
         const m = document.createElement("i");
         m.textContent = r.correct ? "✔" : "✘";
@@ -120,7 +133,7 @@ export async function buildRiddle({ day, door, body, overview }) {
         });
         return b;
       };
-      if (!isTask) box.append(mk("✔", true, "Von Hand richtig"), mk("✘", false, "Von Hand falsch"), mk("auto", null, "Automatisch prüfen"));
+      if (!isTask && !isGuess) box.append(mk("✔", true, "Von Hand richtig"), mk("✘", false, "Von Hand falsch"), mk("auto", null, "Automatisch prüfen"));
       const del = document.createElement("button");
       del.type = "button"; del.textContent = "🗑"; del.title = "Antwort löschen";
       del.addEventListener("click", async () => {
@@ -138,6 +151,7 @@ export async function buildRiddle({ day, door, body, overview }) {
       e.preventDefault();
       const val = input.value.trim().slice(0, door.kind === "frage" ? 300 : 120);
       if (!val) { setFeedback(fb, "Tipp erst eine Antwort ein.", "no"); return; }
+      if (isGuess && toNumber(val) === null) { setFeedback(fb, "Bitte nur eine Zahl eintippen, zum Beispiel 7 oder 3,5.", "no"); return; }
       if (isEmojiTask) {
         const n = emojiCount(val);
         if (n !== 3) { setFeedback(fb, n === -1 ? "Bitte nur Emojis, kein Text." : "Genau 3 Emojis, bitte (du hast " + n + ").", "no"); return; }
@@ -146,7 +160,7 @@ export async function buildRiddle({ day, door, body, overview }) {
       const { error } = await sb.from("answers").upsert({ day, user_id: state.userId, answer: val }, { onConflict: "day,user_id" });
       btn.disabled = false;
       if (error) { setFeedback(fb, friendlyError(error), "no"); return; }
-      setFeedback(fb, isTask ? "Abgeschickt! Jetzt siehst du die Antworten der anderen." : "Abgeschickt! Morgen siehst du, wer richtig lag.", "yes");
+      setFeedback(fb, isTask ? "Abgeschickt! Jetzt siehst du die Antworten der anderen." : isGuess ? "Abgeschickt! Morgen siehst du, wer am nächsten dran war." : "Abgeschickt! Morgen siehst du, wer richtig lag.", "yes");
       load();
     });
     if (!state.isAdmin || !state.preview) input.focus();
@@ -154,3 +168,10 @@ export async function buildRiddle({ day, door, body, overview }) {
 
   load();
 }
+
+// „4,8“, „4.8“, „ca. 5 Flaschen“ → Zahl (oder null)
+function toNumber(v) {
+  const m = String(v ?? "").replace(/\s/g, "").match(/-?\d+(?:[.,]\d+)?/);
+  return m ? parseFloat(m[0].replace(",", ".")) : null;
+}
+function fmt(n) { return (Math.round(n * 100) / 100).toLocaleString("de-DE"); }
