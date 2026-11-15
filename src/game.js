@@ -192,7 +192,7 @@ export function buildGame({ day, door, body, overview }) {
     if (!canSee) {
       const n = overview.count || 0;
       gcount.textContent = n ? plural(n, "Person", "Personen") : "";
-      board.innerHTML = '<li class="note locked-gal">🙈 ' + (n ? plural(n, "Person hat", "Personen haben") + " schon gespielt. Spiel erst selbst, dann siehst du die Liste."
+      board.innerHTML = '<li class="note locked-gal">' + (n ? plural(n, "Person hat", "Personen haben") + " schon gespielt. Spiel erst selbst, dann siehst du die Liste."
         : "Noch hat niemand gespielt. Sei die oder der Erste!") + "</li>";
       return;
     }

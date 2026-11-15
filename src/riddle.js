@@ -27,7 +27,7 @@ export async function buildRiddle({ day, door, body, overview }) {
       : '<div class="emoji" aria-label="Emoji-Rätsel">' + esc(door.emoji) + "</div>" +
         '<p class="ask">' + esc(door.question || "Welcher Film, welche Serie?") + "</p>") +
     '<p class="solution" id="solution" hidden></p>' +
-    (revealed ? "" :
+    (revealed ? '<p class="note-inline" id="overNote">Dieser Tag ist vorbei. Mitmachen geht nicht mehr, aber du kannst dir alles ansehen und reagieren.</p>' :
       '<form id="answerForm"><label for="answer" class="sr">Deine Antwort</label>' +
       (door.kind === "frage"
         ? '<textarea id="answer" maxlength="300" rows="3" placeholder="Deine Antwort"></textarea>'
@@ -83,13 +83,14 @@ export async function buildRiddle({ day, door, body, overview }) {
     const mine = rows.find(r => r.is_me);
     // Schon geantwortet: kein zweiter Versuch
     if (mine && $("#answerForm", body)) { $("#answerForm", body).hidden = true; $("#onceNote", body).hidden = true; }
+    if (mine && $("#overNote", body)) $("#overNote", body).hidden = true;
     const canSeeAll = mine || revealed || state.isAdmin;
     const count = canSeeAll ? rows.length : totalCount;
     gcount.textContent = count ? plural(count, "Antwort", "Antworten") : "";
     list.innerHTML = "";
 
     if (!canSeeAll) {
-      list.innerHTML = '<li class="note locked-gal">🙈 ' + (totalCount
+      list.innerHTML = '<li class="note locked-gal">' + (totalCount
         ? plural(totalCount, "Antwort wartet", "Antworten warten") + ". Tipp erst selbst etwas ein."
         : "Noch keine Antworten. Sei die oder der Erste!") + "</li>";
       return;

@@ -23,7 +23,7 @@ export function buildChallenge({ day, door, body, overview }) {
   const textHtml =
     '<div data-mode="text" class="stack"><label for="cardText" class="sr">Dein Text</label>' +
     '<textarea id="cardText" maxlength="160" placeholder="Dein Text …"></textarea>' +
-    '<canvas id="card" class="prev" width="800" height="800" aria-label="Vorschau deiner Text-Karte"></canvas></div>';
+    '<canvas id="card" width="800" height="800" hidden aria-hidden="true"></canvas></div>';
 
   body.innerHTML =
     '<div class="emoji small">' + esc(door.emoji) + "</div>" +
@@ -44,6 +44,12 @@ export function buildChallenge({ day, door, body, overview }) {
 
   showTask($("#task", body), day, door.question || "");
   const maker = $("#maker", body);
+  // Frühere Tage: nur noch ansehen und reagieren (die Datenbank lässt auch nichts mehr hochladen)
+  const over = !!overview.is_revealed && !state.isAdmin;
+  if (over) {
+    maker.hidden = true;
+    maker.insertAdjacentHTML("afterend", '<p class="note-inline">Dieser Tag ist vorbei. Mitmachen geht nicht mehr, aber du kannst dir alles ansehen und reagieren.</p>');
+  }
   const postBtn = $("#postBtn", body);
   let pending = null; // Blob, der hochgeladen wird (Foto)
   let pad = null;
@@ -121,11 +127,11 @@ export function buildChallenge({ day, door, body, overview }) {
     const targetOf = personal ? await targetsFor(day) : {};
     if (error) { gal.innerHTML = '<p class="note">Die Galerie lässt sich gerade nicht laden.</p>'; return; }
     const mine = rows.find(r => r.user_id === state.userId);
-    maker.hidden = !!mine; // eigener Beitrag da: Werkzeuge ausblenden
-    if (!mine && !state.isAdmin && !(state.overview[24] && state.overview[24].is_open)) {
+    maker.hidden = !!mine || over; // eigener Beitrag da oder Tag vorbei: Werkzeuge ausblenden
+    if (!mine && !state.isAdmin && !overview.is_revealed && !(state.overview[24] && state.overview[24].is_open)) {
       const n = overview.count || 0;
       gcount.textContent = n ? plural(n, "Beitrag", "Beiträge") : "";
-      gal.innerHTML = '<p class="note locked-gal">🙈 ' + (n
+      gal.innerHTML = '<p class="note locked-gal">' + (n
         ? plural(n, "Beitrag wartet", "Beiträge warten") + ". Poste zuerst selbst, dann siehst du alle."
         : "Noch keine Beiträge. Sei die oder der Erste!") + "</p>";
       return;

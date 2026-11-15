@@ -3,7 +3,7 @@ import { state } from "./state.js";
 import { $, esc, plural, setFeedback, friendlyError, onCleanup } from "./ui.js";
 
 // „Wer ist das?“: Fotos werden alle 3 Sekunden schärfer. Der Server bestimmt die Schärfe und prüft die Antwort.
-export function buildGuess({ day, door, body }) {
+export function buildGuess({ day, door, body, overview }) {
   body.innerHTML =
     '<div class="emoji small">' + esc(door.emoji || "🕵️") + "</div>" +
     '<p class="question">' + esc(door.question || "Wer ist das?") + "</p>" +
@@ -17,6 +17,8 @@ export function buildGuess({ day, door, body }) {
   onCleanup(() => { alive = false; clearInterval(poll); });
 
   async function init() {
+    // Frühere Tage: nicht mehr spielen, aber Auflösung und Bestenliste ansehen
+    if (overview && overview.is_revealed && !state.isAdmin) return showOver();
     const { data, error } = await sb.rpc("raten_status", { d: day });
     if (error) { stageEl.innerHTML = '<p class="note">Konnte nicht geladen werden.</p>'; return; }
     count = data && data[0] ? data[0].anzahl : 0;
@@ -95,6 +97,14 @@ export function buildGuess({ day, door, body }) {
     nextBtn.textContent = n < count ? "Nächstes Foto" : "Ergebnis";
     nextBtn.addEventListener("click", () => (n < count ? round(n + 1) : finished()));
     stageEl.append(nextBtn);
+  }
+
+  async function showOver() {
+    const { data } = await sb.rpc("raten_aufloesung", { d: day });
+    stageEl.innerHTML = '<p class="note-inline">Dieser Tag ist vorbei. Mitmachen geht nicht mehr, aber du kannst dir alles ansehen.</p>' +
+      '<div class="guess-solved">' + (data || []).map(r =>
+        '<figure><img src="' + esc(r.bild) + '" alt=""><figcaption>' + esc(r.solution) + "</figcaption></figure>").join("") + "</div>";
+    loadBoard();
   }
 
   async function finished() {
