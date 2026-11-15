@@ -104,23 +104,43 @@ function show() {
   else renderCalendar();
 }
 
+// ---------- Erklärung: beim ersten Besuch oben, danach hinter „So funktioniert's“ ----------
+const INTRO = "Ab dem 1. Dezember geht jeden Tag ein Türchen auf. Mal ist es ein Rätsel, mal eine Foto-, Zeichen- oder Schreibaufgabe. Du hast jeweils einen Versuch. Sobald du deine Antwort abgeschickt hast, siehst du die Lösung und was die anderen gemacht haben. Auf die Antworten der anderen kannst du mit Lachen oder Herz reagieren, jede Reaktion bringt ihnen einen Punkt. Wer am Ende die meisten Punkte hat, gewinnt die Gesamtwertung.";
+const INTRO_KEY = "brunchies-intro-gesehen";
+function introSeen() { try { return localStorage.getItem(INTRO_KEY) === "1"; } catch { return false; } }
+function showHelp() {
+  const body = openDialog({ title: "So funktioniert's", color: "#ffcc1a" });
+  body.innerHTML =
+    '<div class="help">' +
+    "<p>" + INTRO + "</p>" +
+    "<h3>So gibt es Punkte</h3><ul>" +
+    "<li>Rätsel richtig: <b>2</b></li>" +
+    "<li>Spiele: Rangplatz 1–3 bekommt <b>3 / 2 / 1</b></li>" +
+    "<li>Bei einer Challenge mitgemacht: <b>1</b></li>" +
+    "<li>Jedes 😂 oder ❤️ der anderen auf deine Antwort: <b>1</b></li>" +
+    "</ul><p>Die rote Zahl an einer Flasche zeigt, wie viel dort neu ist, seit du zuletzt reingeschaut hast.</p></div>";
+}
+
 // ---------- Kalender-Raster ----------
 async function renderCalendar() {
   if (!app.querySelector("#grid")) {
     app.innerHTML =
       '<div class="wrap" style="gap:22px">' +
-      '<p class="lede">Ab dem 1. Dezember geht jeden Tag ein Türchen auf. Mal ist es ein Rätsel, mal eine Foto-, Zeichen- oder Schreibaufgabe. Du hast jeweils einen Versuch. Sobald du deine Antwort abgeschickt hast, siehst du die Lösung und was die anderen gemacht haben. Auf die Antworten der anderen kannst du mit Lachen oder Herz reagieren, jede Reaktion bringt ihnen einen Punkt. Wer am Ende die meisten Punkte hat, gewinnt die Gesamtwertung.</p>' +
+      (introSeen() ? "" : '<div class="lede" id="intro"><p>' + INTRO + '</p><button class="btn" type="button" id="introOk">Alles klar!</button></div>') +
       '<div class="status"><span class="pill" id="progress">… / 24 erledigt</span>' +
+      '<button class="linkbtn" type="button" id="helpBtn">So funktioniert\'s</button>' +
       '<span class="pill preview" id="previewPill" hidden>👀 Vorschau: alles offen</span></div>' +
       '<div class="grid" id="grid"></div>' +
       '<section class="score" id="score"><div class="gallery-head"><h2>🏆 Gesamtwertung</h2></div>' +
       '<ol class="answers board" id="scoreList"><li class="note">Lädt …</li></ol>' +
-      '<details class="score-help"><summary>So gibt es Punkte</summary><ul>' +
-      "<li>Rätsel richtig: <b>2</b></li>" +
-      "<li>Spiele: Rangplatz 1–3 bekommt <b>3 / 2 / 1</b></li>" +
-      "<li>Bei einer Challenge mitgemacht: <b>1</b></li>" +
-      "<li>Jedes 😂 oder ❤️ der anderen auf deine Antwort: <b>1</b></li>" +
-      "</ul></details></section></div>";
+      '<button class="linkbtn" type="button" id="pointsBtn" style="justify-self:start">So gibt es Punkte</button></section></div>';
+    $("#helpBtn").addEventListener("click", showHelp);
+    $("#pointsBtn").addEventListener("click", showHelp);
+    const ok = $("#introOk");
+    if (ok) ok.addEventListener("click", () => {
+      try { localStorage.setItem(INTRO_KEY, "1"); } catch { /* privater Modus: dann eben beim nächsten Mal wieder */ }
+      $("#intro").remove();
+    });
   }
   $("#previewPill").hidden = !state.preview;
   const [{ data, error }, { data: unseen }] = await Promise.all([sb.rpc("door_overview"), sb.rpc("unseen_counts")]);
