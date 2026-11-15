@@ -123,10 +123,13 @@ async function renderCalendar() {
       "</ul></details></section></div>";
   }
   $("#previewPill").hidden = !state.preview;
-  const { data, error } = await sb.rpc("door_overview");
+  const [{ data, error }, { data: unseen }] = await Promise.all([sb.rpc("door_overview"), sb.rpc("unseen_counts")]);
   if (error) { toast("Kalender konnte nicht geladen werden"); return; }
   state.overview = {};
   (data || []).forEach(d => { state.overview[d.day] = d; });
+  // „Neu“-Zahl: was die anderen seit meinem letzten Besuch beigetragen haben
+  state.unseen = {};
+  (unseen || []).forEach(u => { state.unseen[u.day] = u.neu; });
   paintGrid();
   paintScore();
 }
@@ -168,9 +171,11 @@ function paintGrid() {
     b.style.setProperty("--c", colorFor(day));
     b.style.setProperty("--tilt", TILTS[day % TILTS.length] + "deg");
     // Keine Typ-Icons: Was hinter einem Türchen steckt, bleibt bis zum Öffnen eine Überraschung.
+    const neu = (state.unseen || {})[day] || 0;
     b.innerHTML = bottleSVG(day) +
-      (o.done ? '<span class="check" aria-hidden="true">✔</span>' : "");
-    b.setAttribute("aria-label", "Türchen " + day + (o.done ? ", erledigt" : open ? "" : ", noch verschlossen"));
+      (o.done ? '<span class="check" aria-hidden="true">✔</span>' : "") +
+      (neu ? '<span class="neu" aria-hidden="true">' + (neu > 99 ? "99+" : neu) + "</span>" : "");
+    b.setAttribute("aria-label", "Türchen " + day + (o.done ? ", erledigt" : open ? "" : ", noch verschlossen") + (neu ? ", " + neu + " neu" : ""));
     b.addEventListener("click", async () => {
       if (b.classList.contains("popping")) return;
       if (open && !b.classList.contains("uncorked")) {
@@ -197,7 +202,10 @@ async function openDoor(day) {
     body.innerHTML = '<p class="locked-msg">Nicht schummeln! 🙈<br>Dieses Türchen öffnet sich am <b>' + day + ". Dezember</b>.</p>";
     return;
   }
-  const body = openDialog({ title: day + ". Dezember", chip: KIND_LABEL[o.kind] || "", color, onClose: refreshGrid });
+  // Angeschaut: „Neu“-Zahl beim Öffnen und beim Schließen zurücksetzen
+  sb.rpc("mark_seen", { d: day });
+  const body = openDialog({ title: day + ". Dezember", chip: KIND_LABEL[o.kind] || "", color,
+    onClose: async () => { await sb.rpc("mark_seen", { d: day }); refreshGrid(); } });
   // Der Server liefert das Türchen nur, wenn es offen ist (oder du Admin bist).
   const { data: door, error } = await sb.from("doors").select("*").eq("day", day).maybeSingle();
   if (error || !door) {

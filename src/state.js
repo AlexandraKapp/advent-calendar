@@ -6,5 +6,6 @@ export const state = {
   isAdmin: false,
   resetAt: "",    // Zeitpunkt des letzten Admin-Resets (für die geknallten Korken)
   preview: false,  // Admin-Vorschau: alle Türchen offen
-  overview: {},    // day -> { kind, is_open, is_revealed, done, count }
+  overview: {},
+  unseen: {},      // day -> Anzahl neuer Sachen seit dem letzten Besuch    // day -> { kind, is_open, is_revealed, done, count }
 };

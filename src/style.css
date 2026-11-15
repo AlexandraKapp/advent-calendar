@@ -119,6 +119,7 @@ h1 .hl { color: var(--paper); text-shadow: 3px 3px 0 var(--teal), 6px 6px 0 var(
 
 /* Abzeichen */
 .door .tag { position: absolute; bottom: -6px; right: -6px; font-size: .85rem; background: var(--paper); border: 2px solid var(--ink); border-radius: 999px; width: 28px; height: 28px; display: grid; place-items: center; }
+.door .neu { position: absolute; top: -6px; right: -6px; z-index: 3; min-width: 26px; height: 26px; padding: 0 6px; box-sizing: border-box; display: grid; place-items: center; font-size: .8rem; font-weight: 800; color: #fff; background: #e0245e; border: 2px solid var(--ink); border-radius: 999px; }
 .door .check { position: absolute; bottom: -6px; left: -6px; font-size: .8rem; font-weight: 800; color: var(--paper); background: var(--ok); border: 2px solid var(--ink); border-radius: 999px; width: 28px; height: 28px; display: grid; place-items: center; }
 
 /* Tür 24: die große Flasche auf Glitzer-Hintergrund */
