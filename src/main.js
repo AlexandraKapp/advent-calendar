@@ -109,10 +109,18 @@ async function renderCalendar() {
   if (!app.querySelector("#grid")) {
     app.innerHTML =
       '<div class="wrap" style="gap:22px">' +
-      '<p class="lede">Ab dem 1. Dezember geht jeden Tag ein Türchen auf. Mal ist es ein Rätsel, mal eine Foto- oder Zeichenaufgabe. Was die anderen geantwortet oder gepostet haben, siehst du, sobald du selbst mitgemacht hast. Die Lösung kommt jeweils am nächsten Tag.</p>' +
+      '<p class="lede">Ab dem 1. Dezember geht jeden Tag ein Türchen auf. Mal ist es ein Rätsel, mal eine Foto-, Zeichen- oder Schreibaufgabe. Du hast jeweils einen Versuch. Sobald du deine Antwort abgeschickt hast, siehst du die Lösung und was die anderen gemacht haben. Auf die Antworten der anderen kannst du mit Lachen oder Herz reagieren, jede Reaktion bringt ihnen einen Punkt. Wer am Ende die meisten Punkte hat, gewinnt die Gesamtwertung.</p>' +
       '<div class="status"><span class="pill" id="progress">… / 24 erledigt</span>' +
       '<span class="pill preview" id="previewPill" hidden>👀 Vorschau: alles offen</span></div>' +
-      '<div class="grid" id="grid"></div></div>';
+      '<div class="grid" id="grid"></div>' +
+      '<section class="score" id="score"><div class="gallery-head"><h2>🏆 Gesamtwertung</h2></div>' +
+      '<ol class="answers board" id="scoreList"><li class="note">Lädt …</li></ol>' +
+      '<details class="score-help"><summary>So gibt es Punkte</summary><ul>' +
+      "<li>Rätsel richtig: <b>2</b></li>" +
+      "<li>Spiele: Rangplatz 1–3 bekommt <b>3 / 2 / 1</b></li>" +
+      "<li>Bei einer Challenge mitgemacht: <b>1</b></li>" +
+      "<li>Jedes 😂 oder ❤️ der anderen auf deine Antwort: <b>1</b></li>" +
+      "</ul></details></section></div>";
   }
   $("#previewPill").hidden = !state.preview;
   const { data, error } = await sb.rpc("door_overview");
@@ -120,6 +128,26 @@ async function renderCalendar() {
   state.overview = {};
   (data || []).forEach(d => { state.overview[d.day] = d; });
   paintGrid();
+  paintScore();
+}
+
+async function paintScore() {
+  const list = $("#scoreList");
+  if (!list) return;
+  const { data, error } = await sb.rpc("scoreboard");
+  if (error) { list.innerHTML = '<li class="note">Die Wertung lässt sich gerade nicht laden.</li>'; return; }
+  const rows = (data || []).filter(r => r.punkte > 0 || r.is_me);
+  if (!rows.some(r => r.punkte > 0)) { list.innerHTML = '<li class="note">Noch keine Punkte. Ab dem 1. Dezember geht es los!</li>'; return; }
+  list.innerHTML = "";
+  let rank = 0, last = null;
+  rows.forEach((r, i) => {
+    if (r.punkte !== last) { rank = i + 1; last = r.punkte; }
+    const li = document.createElement("li");
+    li.innerHTML = '<b class="rank">' + (r.punkte === 0 ? "–" : ["🥇", "🥈", "🥉"][rank - 1] || rank + ".") + "</b><span>" + esc(r.is_me ? "Du" : r.name) + "</span><i>" + r.punkte + "</i>";
+    li.title = "Rätsel " + r.raetsel + " · Spiele " + r.spiele + " · Mitmachen " + r.mitmachen + " · Reaktionen " + r.reaktionen;
+    if (r.is_me) li.classList.add("me");
+    list.append(li);
+  });
 }
 
 function paintGrid() {

@@ -22,7 +22,7 @@ export async function renderAdmin(app) {
   root.className = "admin";
   root.innerHTML =
     '<p class="lede">🛠️ <b>Admin-Bereich.</b> Hier bearbeitest du Türchen und Lösungen. ' +
-    "Rätsel und Lösungen liegen nur in der Datenbank. Freunde sehen ein Türchen erst an seinem Tag und die Lösung erst am Tag danach um 0:00.</p>" +
+    "Rätsel und Lösungen liegen nur in der Datenbank. Freunde sehen ein Türchen erst an seinem Tag und die Lösung erst, nachdem sie selbst geantwortet haben.</p>" +
     "<h2>Türchen</h2>";
   for (let day = 1; day <= 24; day++) root.append(doorEditor(day, doors[day], sols[day]));
 
@@ -70,7 +70,7 @@ function doorEditor(day, d, s) {
       '<p class="small" style="text-align:left">Tipp: Schreib <b>{person}</b> in die Aufgabe, z. B. „Stelle {person} auf einem Foto nach.“ Dann bekommt jede Person beim Öffnen jemand anderen aus der Gruppe zugelost.</p></div>' +
     '<div class="stack" data-only="challenge"><label class="lbl">Kurztitel fürs Rückblick-Video</label><input type="text" name="short" value="' + esc(d.short) + '"></div>' +
     '<div class="stack" data-only="zeichnen"><label class="lbl">Sekunden (Zeichnen / Spiel)</label><input type="number" name="seconds" min="3" max="600" value="' + (d.seconds ?? 30) + '"></div>' +
-    '<div class="stack" data-only="riddle"><label class="lbl" data-for="solution">Lösung (wird am Folgetag angezeigt)</label><input type="text" name="solution" value="' + esc(s.solution) + '"></div>' +
+    '<div class="stack" data-only="riddle"><label class="lbl" data-for="solution">Lösung (wird nach der eigenen Antwort angezeigt)</label><input type="text" name="solution" value="' + esc(s.solution) + '"></div>' +
     '<div class="stack" data-only="riddle"><label class="lbl" data-for="accepted">Gilt als richtig (mit Komma getrennt)</label><input type="text" name="accepted" value="' + esc((s.accepted || []).join(", ")) + '">' +
       '<p class="small" data-for="acchint" style="text-align:left">Groß/klein, Leerzeichen und Umlaute sind egal. Begriffe ab 4 Buchstaben dürfen irgendwo in der Antwort stehen („schirm“ passt zu „ein Regenschirm“), kürzere müssen genau passen.</p></div>' +
     '<button class="btn" type="submit">💾 Speichern</button>';
@@ -90,7 +90,7 @@ function doorEditor(day, d, s) {
   function updateVisibility() {
     const kind = f.kind.value;
     const isRiddle = kind === "emoji" || kind === "wort" || kind === "schaetzen";
-    f.querySelector('[data-for="solution"]').textContent = kind === "schaetzen" ? "Auflösung (Text, wird am Folgetag angezeigt)" : "Lösung (wird am Folgetag angezeigt)";
+    f.querySelector('[data-for="solution"]').textContent = kind === "schaetzen" ? "Auflösung (Text, wird nach der eigenen Schätzung angezeigt)" : "Lösung (wird nach der eigenen Antwort angezeigt)";
     f.querySelector('[data-for="accepted"]').textContent = kind === "schaetzen" ? "Richtige Zahl (für die Rangliste)" : "Gilt als richtig (mit Komma getrennt)";
     f.querySelector('[data-for="acchint"]').hidden = kind === "schaetzen";
     f.querySelectorAll("[data-only]").forEach(el => {

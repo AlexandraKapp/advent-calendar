@@ -16,12 +16,15 @@ sind verkorkt und haben ein Schloss. Öffnet man das Türchen des Tages, knallt 
 
 | Türchen | Was man macht | Was man sieht |
 |---|---|---|
-| **Emoji-Rätsel** (Filme & Serien) und **Worträtsel** | Antwort eintippen, bis Mitternacht änderbar | Die Antworten der anderen (mit Namen) erst nach der eigenen. Am nächsten Tag um 0:00 die Lösung, jede Antwort mit ✔ oder ✘ |
+| **Emoji-Rätsel** (Filme & Serien) und **Worträtsel** | Antwort eintippen, ein Versuch | Direkt nach der eigenen Antwort die Lösung und die Antworten der anderen (mit Namen), jede mit ✔ oder ✘ |
 | **Foto-Challenge** | Foto aufnehmen oder aus der Galerie wählen; es wird vor dem Hochladen verkleinert | Die Galerie der anderen erst nach dem eigenen Beitrag. Eigene Beiträge lassen sich löschen |
 | **Zeichen-Challenge** | Im Browser mit dem Finger zeichnen, mit Countdown ab dem ersten Strich | wie bei der Foto-Challenge |
+| **Schätzfrage** | Eine Zahl schätzen, ein Versuch | Direkt danach die richtige Zahl und eine Rangliste, wer am nächsten dran ist |
 
 - **Anmeldung ohne Passwort:** E-Mail eingeben, auf den Link in der Mail tippen (oder den Code eingeben), Namen wählen, fertig. Man bleibt den ganzen Monat angemeldet.
-- **Admin-Bereich:** Türchen und Lösungen bearbeiten, Vorschau mit allen offenen Türchen, alles löschen, Bewertungen von Hand korrigieren.
+- **Reaktionen:** Auf Antworten und Beiträge ohne richtig oder falsch (Fotos, Zeichnungen, Captions, freie Fragen) kann man mit 😂 oder ❤️ reagieren, aber nicht auf die eigenen.
+- **Gesamtwertung:** Rätsel richtig 2 Punkte, Platz 1–3 bei Schätzfrage und Spielen 3/2/1, jede Challenge 1 Punkt, jede bekommene Reaktion 1 Punkt.
+- **Admin-Bereich:** Türchen und Lösungen bearbeiten, Vorschau mit allen offenen Türchen, nach dem Testen alles zurücksetzen, Bewertungen von Hand korrigieren.
 
 ## Keine Chance zum Spicken
 
@@ -30,7 +33,7 @@ den der Browser lädt. Sie liegen nur in Supabase. Die Datenbank entscheidet sel
 (Row Level Security, Zeitzone Europe/Berlin), was jemand sehen darf:
 
 - ein Türchen (auch welche Art es ist) erst ab 0:00 an seinem Tag
-- die Lösung erst ab 0:00 am Folgetag
+- die Lösung erst, nachdem man selbst geantwortet hat (danach lässt sich die Antwort nicht mehr ändern)
 - fremde Antworten und Fotos erst nach dem eigenen Beitrag
 
 Wer im Browser herumtrickst, bekommt trotzdem nichts zu sehen.

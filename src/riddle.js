@@ -2,6 +2,7 @@ import { sb } from "./supabase.js";
 import { state } from "./state.js";
 import { $, esc, plural, setFeedback, friendlyError } from "./ui.js";
 import { isPersonal, showTask, targetsFor, emojiCount } from "./person.js";
+import { hasReactions, loadReactions, reactionBar } from "./reactions.js";
 
 export async function buildRiddle({ day, door, body, overview }) {
   const revealed = !!overview.is_revealed;
@@ -10,7 +11,8 @@ export async function buildRiddle({ day, door, body, overview }) {
   const isTask = door.kind === "aufgabe" || door.kind === "frage" || door.kind === "meme";
   const isMeme = door.kind === "meme";
   const isEmojiTask = door.kind === "aufgabe";
-  // Schätzfrage: Antwort ist eine Zahl; nach der Auflösung gewinnt, wer am nächsten dran ist
+  // Schätzfrage: Antwort ist eine Zahl; wer am nächsten dran ist, steht oben.
+  // Für alle gilt: ein Versuch. Nach dem Abschicken kommen sofort Lösung und Antworten der anderen.
   const isGuess = door.kind === "schaetzen";
   let target = null;
   const personal = isPersonal(door.question);
@@ -31,7 +33,7 @@ export async function buildRiddle({ day, door, body, overview }) {
         ? '<textarea id="answer" maxlength="300" rows="3" placeholder="Deine Antwort"></textarea>'
         : '<input type="text" id="answer" maxlength="120" autocomplete="off" placeholder="' + (isEmojiTask ? "Deine 3 Emojis" : isMeme ? "Deine Caption" : isGuess ? "Deine Schätzung (Zahl)" : "Deine Antwort") + '"' + (isEmojiTask ? ' class="emoji-input"' : isGuess ? ' inputmode="decimal"' : "") + ">") +
       '<button class="btn" type="submit" id="sendBtn">Abschicken</button></form>' +
-      '<p class="note-inline">' + (isTask ? "Bis morgen um 0:00 kannst du deine Antwort noch ändern." : isGuess ? "Die Auflösung gibt es morgen um 0:00. Bis dahin kannst du deine Schätzung noch ändern." : "Die Lösung gibt es morgen um 0:00. Bis dahin kannst du deine Antwort noch ändern.") + "</p>") +
+      '<p class="note-inline" id="onceNote">Du hast einen Versuch. ' + (isTask ? "Danach siehst du die Antworten der anderen." : isGuess ? "Danach siehst du die richtige Zahl und die Schätzungen der anderen." : "Danach siehst du die Lösung und die Antworten der anderen.") + "</p>") +
     '<p class="feedback" id="feedback" aria-live="polite"></p>' +
     '<div class="gallery-head"><h3>' + (isMeme ? "Captions" : isGuess ? "Schätzungen" : "Antworten") + '</h3><span id="gcount"></span></div>' +
     '<ul class="answers" id="answers"><li class="note">Lädt …</li></ul>';
@@ -42,6 +44,7 @@ export async function buildRiddle({ day, door, body, overview }) {
   const input = $("#answer", body);
   let totalCount = overview.count || 0;
   let targetOf = {};
+  let reactMap = {};
   if (isTask) showTask($("#task", body), day, door.question || (isMeme ? "Caption this!" : ""));
 
   // Meme: Foto einmal oben anzeigen; die Captions stehen als Text in der Liste darunter
@@ -51,26 +54,35 @@ export async function buildRiddle({ day, door, body, overview }) {
     else $("#memeMain", body).hidden = true;
   }
 
-  if (revealed) {
+  // Lösung: erst nach der eigenen Antwort (die Datenbank gibt sie vorher auch nicht heraus)
+  let solLoaded = false;
+  async function loadSolution() {
+    if (solLoaded || isTask) return;
     const { data: sol } = await sb.from("door_solutions").select("solution, accepted").eq("day", day).maybeSingle();
-    if (isGuess && sol && sol.accepted && sol.accepted.length) target = toNumber(sol.accepted[0]);
-    if (sol && sol.solution) {
+    if (!sol) return;
+    solLoaded = true;
+    if (isGuess && sol.accepted && sol.accepted.length) target = toNumber(sol.accepted[0]);
+    if (sol.solution) {
       const el = $("#solution", body);
       el.innerHTML = "Lösung: <b>" + esc(sol.solution) + "</b>";
       el.hidden = false;
     }
   }
+  let justSent = false;
 
   async function load() {
     const { data, error } = await sb.rpc("get_answers", { d: day });
+    if (!error && (revealed || (data || []).some(r => r.is_me))) await loadSolution();
     if (personal) targetOf = await targetsFor(day);
+    if (hasReactions(door.kind)) reactMap = await loadReactions(day);
     if (error) { list.innerHTML = '<li class="note">Die Antworten lassen sich gerade nicht laden.</li>'; return; }
     paint(data || []);
   }
 
   function paint(rows) {
     const mine = rows.find(r => r.is_me);
-    if (input && mine && !input.value) input.value = mine.answer;
+    // Schon geantwortet: kein zweiter Versuch
+    if (mine && $("#answerForm", body)) { $("#answerForm", body).hidden = true; $("#onceNote", body).hidden = true; }
     const canSeeAll = mine || revealed || state.isAdmin;
     const count = canSeeAll ? rows.length : totalCount;
     gcount.textContent = count ? plural(count, "Antwort", "Antworten") : "";
@@ -91,6 +103,12 @@ export async function buildRiddle({ day, door, body, overview }) {
       let rank = 0, last = null;
       rows.forEach((r, i) => { const o = off(r); if (o !== last) { rank = i + 1; last = o; } r.rank = rank; r.off = o; });
     } else rows.sort((a, b) => (b.is_me ? 1 : 0) - (a.is_me ? 1 : 0));
+    if (justSent && mine) {
+      justSent = false;
+      if (isGuess && mine.off !== undefined && mine.off !== Infinity) setFeedback(fb, mine.off === 0 ? "Genau richtig! 🎯" : "Abgeschickt! Du liegst " + fmt(mine.off) + " daneben.", "yes");
+      else if (!isTask && !isGuess && mine.correct !== null && mine.correct !== undefined) setFeedback(fb, mine.correct ? "Richtig! 🎉" : "Leider falsch.", mine.correct ? "yes" : "no");
+      else setFeedback(fb, "Abgeschickt! Jetzt siehst du die Antworten der anderen.", "yes");
+    }
     rows.forEach(r => {
       const li = document.createElement("li");
       const marked = !isTask && !isGuess && r.correct !== null && r.correct !== undefined;
@@ -113,6 +131,7 @@ export async function buildRiddle({ day, door, body, overview }) {
         m.setAttribute("aria-label", r.correct ? "richtig" : "falsch");
         li.append(m);
       }
+      if (hasReactions(door.kind)) { li.classList.add("has-react"); li.append(reactionBar(day, r.user_id, null, reactMap)); }
       if (state.isAdmin) { li.classList.add("has-adm"); li.append(adminControls(r)); }
       list.append(li);
     });
@@ -157,10 +176,14 @@ export async function buildRiddle({ day, door, body, overview }) {
         if (n !== 3) { setFeedback(fb, n === -1 ? "Bitte nur Emojis, kein Text." : "Genau 3 Emojis, bitte (du hast " + n + ").", "no"); return; }
       }
       const btn = $("#sendBtn", body); btn.disabled = true;
-      const { error } = await sb.from("answers").upsert({ day, user_id: state.userId, answer: val }, { onConflict: "day,user_id" });
+      const { error } = await sb.from("answers").insert({ day, user_id: state.userId, answer: val });
       btn.disabled = false;
-      if (error) { setFeedback(fb, friendlyError(error), "no"); return; }
-      setFeedback(fb, isTask ? "Abgeschickt! Jetzt siehst du die Antworten der anderen." : isGuess ? "Abgeschickt! Morgen siehst du, wer am nächsten dran war." : "Abgeschickt! Morgen siehst du, wer richtig lag.", "yes");
+      if (error) {
+        setFeedback(fb, /duplicate|unique/i.test(error.message || "") ? "Du hast hier schon geantwortet." : friendlyError(error), "no");
+        if (/duplicate|unique/i.test(error.message || "")) load();
+        return;
+      }
+      justSent = true;
       load();
     });
     if (!state.isAdmin || !state.preview) input.focus();

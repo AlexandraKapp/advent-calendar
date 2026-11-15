@@ -1,5 +1,6 @@
 import { sb, BUCKET } from "./supabase.js";
 import { state } from "./state.js";
+import { loadReactions, reactionBar } from "./reactions.js";
 import { $, esc, plural, setFeedback, friendlyError, onCleanup } from "./ui.js";
 import { shrinkImage, exportCanvas } from "./images.js";
 import { isPersonal, showTask, targetsFor } from "./person.js";
@@ -133,6 +134,7 @@ export function buildChallenge({ day, door, body, overview }) {
     if (!rows.length) { gal.innerHTML = '<p class="note">Noch keine Beiträge. Sei die oder der Erste!</p>'; return; }
 
     const { data: signed } = await sb.storage.from(BUCKET).createSignedUrls(rows.map(r => r.path), 60 * 60);
+    const reactMap = await loadReactions(day);
     const urlFor = {};
     (signed || []).forEach(s => { if (s.signedUrl) urlFor[s.path] = s.signedUrl; });
 
@@ -144,7 +146,7 @@ export function buildChallenge({ day, door, body, overview }) {
       const cap = document.createElement("figcaption");
       cap.textContent = (r.user_id === state.userId ? "Du" : (r.profiles ? r.profiles.name : "Jemand")) +
         (targetOf[r.user_id] ? " → " + targetOf[r.user_id] : "");
-      fig.append(im, cap);
+      fig.append(im, cap, reactionBar(day, r.user_id, r.id, reactMap));
       if (r.user_id === state.userId || state.isAdmin) {
         const del = document.createElement("button");
         del.className = "del"; del.type = "button"; del.textContent = "Löschen";

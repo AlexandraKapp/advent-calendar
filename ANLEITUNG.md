@@ -139,7 +139,7 @@ Schick der Gruppe einfach den Link, z. B. per WhatsApp:
 ## Rätsel bearbeiten
 
 - **Am einfachsten:** In der App auf **🛠️ Admin** tippen, ein Türchen aufklappen, ändern, **Speichern**.
-- **Lösung:** Wird am Folgetag um 0:00 angezeigt.
+- **Lösung:** Wird angezeigt, sobald man selbst geantwortet hat. Jede Person hat einen Versuch.
 - **Gilt als richtig:** Begriffe mit Komma getrennt, z. B. `regenschirm, schirm, umbrella`. Umlaute, Groß/klein und Leerzeichen sind egal.
 - Lag jemand „fast richtig“? Nach der Auflösung siehst du als Admin bei jeder Antwort ✔ / ✘ / auto und kannst die Bewertung von Hand ändern.
 - Typ ändern geht jederzeit: Emoji-Rätsel, Worträtsel, Foto-Challenge, Zeichen-Challenge, Rückblick (Tür 24).
