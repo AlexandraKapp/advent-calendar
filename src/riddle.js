@@ -169,7 +169,7 @@ export async function buildRiddle({ day, door, body, overview }) {
   load();
 }
 
-// „4,8“, „4.8“, „ca. 5 Flaschen“ → Zahl (oder null)
+// „3,5“, „3.5“, „ca. 7 Stück“ → Zahl (oder null)
 function toNumber(v) {
   const m = String(v ?? "").replace(/\s/g, "").match(/-?\d+(?:[.,]\d+)?/);
   return m ? parseFloat(m[0].replace(",", ".")) : null;
