@@ -45,7 +45,7 @@ export function buildChallenge({ day, door, body, overview }) {
   showTask($("#task", body), day, door.question || "");
   const maker = $("#maker", body);
   // Frühere Tage: nur noch ansehen und reagieren (die Datenbank lässt auch nichts mehr hochladen)
-  const over = !!overview.is_revealed && !state.isAdmin;
+  const over = !!overview.is_revealed && !(state.isAdmin && state.preview); // Admin nur in der Vorschau
   if (over) {
     maker.hidden = true;
     maker.insertAdjacentHTML("afterend", '<p class="note-inline">Dieser Tag ist vorbei. Mitmachen geht nicht mehr, aber du kannst dir alles ansehen und reagieren.</p>');

@@ -18,7 +18,7 @@ export function buildGuess({ day, door, body, overview }) {
 
   async function init() {
     // Frühere Tage: nicht mehr spielen, aber Auflösung und Bestenliste ansehen
-    if (overview && overview.is_revealed && !state.isAdmin) return showOver();
+    if (overview && overview.is_revealed && !(state.isAdmin && state.preview)) return showOver();
     const { data, error } = await sb.rpc("raten_status", { d: day });
     if (error) { stageEl.innerHTML = '<p class="note">Konnte nicht geladen werden.</p>'; return; }
     count = data && data[0] ? data[0].anzahl : 0;
