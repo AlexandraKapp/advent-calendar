@@ -67,11 +67,11 @@ window.addEventListener("hashchange", () => { if (state.profile) show(); });
 function renderHeader() {
   headExtra.innerHTML =
     '<div class="userbar">' +
-      '<span class="pill">👋 ' + esc(state.profile.name) + "</span>" +
+      '<span class="pill">' + esc(state.profile.name) + "</span>" +
       '<button class="linkbtn" id="renameBtn" type="button">Name ändern</button>' +
       (state.isAdmin
-        ? '<button class="linkbtn' + (state.preview ? " on" : "") + '" id="previewBtn" type="button">👀 Vorschau ' + (state.preview ? "an" : "aus") + "</button>" +
-          '<button class="linkbtn' + (location.hash === "#admin" ? " on" : "") + '" id="adminBtn" type="button">🛠️ Admin</button>'
+        ? '<button class="linkbtn' + (state.preview ? " on" : "") + '" id="previewBtn" type="button">Vorschau ' + (state.preview ? "an" : "aus") + "</button>" +
+          '<button class="linkbtn' + (location.hash === "#admin" ? " on" : "") + '" id="adminBtn" type="button">Admin</button>'
         : "") +
       '<button class="linkbtn" id="logoutBtn" type="button">Abmelden</button>' +
     "</div>";
@@ -105,7 +105,7 @@ function show() {
 }
 
 // ---------- Erklärung: beim ersten Besuch oben, danach hinter „So funktioniert's“ ----------
-const INTRO = "Ab dem 1. Dezember geht jeden Tag ein Türchen auf. Mal ist es ein Rätsel, mal eine Foto-, Zeichen- oder Schreibaufgabe. Du hast jeweils einen Versuch. Sobald du deine Antwort abgeschickt hast, siehst du die Lösung und was die anderen gemacht haben. Auf die Antworten der anderen kannst du mit Lachen oder Herz reagieren, jede Reaktion bringt ihnen einen Punkt. Wer am Ende die meisten Punkte hat, gewinnt die Gesamtwertung.";
+const INTRO = "Vom 1. bis 24. Dezember geht jeden Tag ein Türchen auf: mal ein Rätsel, mal ein Foto, eine Zeichnung oder etwas zum Schreiben. Pro Türchen hast du einen Versuch. Danach siehst du die Lösung und was die anderen gemacht haben. Mit Lachen oder Herz kannst du auf ihre Antworten reagieren, das gibt ihnen Punkte für die Gesamtwertung.";
 const INTRO_KEY = "brunchies-intro-gesehen";
 function introSeen() { try { return localStorage.getItem(INTRO_KEY) === "1"; } catch { return false; } }
 function showHelp() {
@@ -126,12 +126,12 @@ async function renderCalendar() {
   if (!app.querySelector("#grid")) {
     app.innerHTML =
       '<div class="wrap" style="gap:22px">' +
-      (introSeen() ? "" : '<div class="lede" id="intro"><p>' + INTRO + '</p><button class="btn" type="button" id="introOk">Alles klar!</button></div>') +
+      (introSeen() ? "" : '<div class="lede" id="intro"><p>' + INTRO + '</p><button class="btn" type="button" id="introOk">Verstanden</button></div>') +
       '<div class="status"><span class="pill" id="progress">… / 24 erledigt</span>' +
       '<button class="linkbtn" type="button" id="helpBtn">So funktioniert\'s</button>' +
-      '<span class="pill preview" id="previewPill" hidden>👀 Vorschau: alles offen</span></div>' +
+      '<span class="pill preview" id="previewPill" hidden>Vorschau: alles offen</span></div>' +
       '<div class="grid" id="grid"></div>' +
-      '<section class="score" id="score"><div class="gallery-head"><h2>🏆 Gesamtwertung</h2></div>' +
+      '<section class="score" id="score"><div class="gallery-head"><h2>Gesamtwertung</h2></div>' +
       '<ol class="answers board" id="scoreList"><li class="note">Lädt …</li></ol>' +
       '<button class="linkbtn" type="button" id="pointsBtn" style="justify-self:start">So gibt es Punkte</button></section></div>';
     $("#helpBtn").addEventListener("click", showHelp);
@@ -166,7 +166,7 @@ async function paintScore() {
   rows.forEach((r, i) => {
     if (r.punkte !== last) { rank = i + 1; last = r.punkte; }
     const li = document.createElement("li");
-    li.innerHTML = '<b class="rank">' + (r.punkte === 0 ? "–" : ["🥇", "🥈", "🥉"][rank - 1] || rank + ".") + "</b><span>" + esc(r.is_me ? "Du" : r.name) + "</span><i>" + r.punkte + "</i>";
+    li.innerHTML = '<b class="rank">' + (r.punkte === 0 ? "–" : rank + ".") + "</b><span>" + esc(r.is_me ? "Du" : r.name) + "</span><i>" + r.punkte + "</i>";
     li.title = "Rätsel " + r.raetsel + " · Spiele " + r.spiele + " · Mitmachen " + r.mitmachen + " · Reaktionen " + r.reaktionen;
     if (r.is_me) li.classList.add("me");
     list.append(li);
@@ -219,7 +219,7 @@ async function openDoor(day) {
   const color = colorFor(day);
   if (!open) {
     const body = openDialog({ title: day + ". Dezember", color });
-    body.innerHTML = '<p class="locked-msg">Nicht schummeln! 🙈<br>Dieses Türchen öffnet sich am <b>' + day + ". Dezember</b>.</p>";
+    body.innerHTML = '<p class="locked-msg">Dieses Türchen geht erst am <b>' + day + ". Dezember</b> auf.</p>";
     return;
   }
   // Angeschaut: „Neu“-Zahl beim Öffnen und beim Schließen zurücksetzen
@@ -229,7 +229,7 @@ async function openDoor(day) {
   // Der Server liefert das Türchen nur, wenn es offen ist (oder du Admin bist).
   const { data: door, error } = await sb.from("doors").select("*").eq("day", day).maybeSingle();
   if (error || !door) {
-    body.innerHTML = '<p class="locked-msg">' + (error ? "Konnte nicht geladen werden. Bist du online?" : "Hier ist noch nichts drin. 🤷") + "</p>";
+    body.innerHTML = '<p class="locked-msg">' + (error ? "Konnte nicht geladen werden. Bist du online?" : "Hier ist noch nichts drin.") + "</p>";
     return;
   }
   const chip = $(".chip", $("#card"));

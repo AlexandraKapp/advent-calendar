@@ -91,8 +91,8 @@ export async function buildRiddle({ day, door, body, overview }) {
 
     if (!canSeeAll) {
       list.innerHTML = '<li class="note locked-gal">' + (totalCount
-        ? plural(totalCount, "Antwort wartet", "Antworten warten") + ". Tipp erst selbst etwas ein."
-        : "Noch keine Antworten. Sei die oder der Erste!") + "</li>";
+        ? plural(totalCount, "Antwort wartet", "Antworten warten") + ". Du siehst sie, sobald du selbst geantwortet hast."
+        : "Noch keine Antworten.") + "</li>";
       return;
     }
     if (!rows.length) { list.innerHTML = '<li class="note">Niemand hat geantwortet.</li>'; return; }
@@ -106,16 +106,16 @@ export async function buildRiddle({ day, door, body, overview }) {
     } else rows.sort((a, b) => (b.is_me ? 1 : 0) - (a.is_me ? 1 : 0));
     if (justSent && mine) {
       justSent = false;
-      if (isGuess && mine.off !== undefined && mine.off !== Infinity) setFeedback(fb, mine.off === 0 ? "Genau richtig! 🎯" : "Abgeschickt! Du liegst " + fmt(mine.off) + " daneben.", "yes");
-      else if (!isTask && !isGuess && mine.correct !== null && mine.correct !== undefined) setFeedback(fb, mine.correct ? "Richtig! 🎉" : "Leider falsch.", mine.correct ? "yes" : "no");
-      else setFeedback(fb, "Abgeschickt! Jetzt siehst du die Antworten der anderen.", "yes");
+      if (isGuess && mine.off !== undefined && mine.off !== Infinity) setFeedback(fb, mine.off === 0 ? "Genau richtig." : "Abgeschickt. Du liegst " + fmt(mine.off) + " daneben.", "yes");
+      else if (!isTask && !isGuess && mine.correct !== null && mine.correct !== undefined) setFeedback(fb, mine.correct ? "Richtig." : "Leider falsch.", mine.correct ? "yes" : "no");
+      else setFeedback(fb, "Abgeschickt.", "yes");
     }
     rows.forEach(r => {
       const li = document.createElement("li");
       const marked = !isTask && !isGuess && r.correct !== null && r.correct !== undefined;
       if (marked) li.className = r.correct ? "right" : "wrong";
       const who = document.createElement("b");
-      who.textContent = (r.rank ? (["🥇", "🥈", "🥉"][r.rank - 1] || r.rank + ".") + " " : "") +
+      who.textContent = (r.rank ? r.rank + ". " : "") +
         (r.is_me ? "Du" : r.name) + (targetOf[r.user_id] ? " → " + targetOf[r.user_id] : "");
       const txt = document.createElement("span"); txt.textContent = r.answer;
       if (isEmojiTask) txt.className = "emoji-answer";
@@ -155,7 +155,7 @@ export async function buildRiddle({ day, door, body, overview }) {
       };
       if (!isTask && !isGuess) box.append(mk("✔", true, "Von Hand richtig"), mk("✘", false, "Von Hand falsch"), mk("auto", null, "Automatisch prüfen"));
       const del = document.createElement("button");
-      del.type = "button"; del.textContent = "🗑"; del.title = "Antwort löschen";
+      del.type = "button"; del.textContent = "Löschen"; del.title = "Antwort löschen";
       del.addEventListener("click", async () => {
         if (!confirm("Antwort von " + r.name + " löschen?")) return;
         const { error } = await sb.from("answers").delete().eq("day", day).eq("user_id", r.user_id);

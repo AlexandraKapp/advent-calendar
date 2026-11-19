@@ -21,7 +21,7 @@ export async function renderAdmin(app) {
   const root = document.createElement("div");
   root.className = "admin";
   root.innerHTML =
-    '<p class="lede">🛠️ <b>Admin-Bereich.</b> Hier bearbeitest du Türchen und Lösungen. ' +
+    '<p class="lede"><b>Admin-Bereich.</b> Hier bearbeitest du Türchen und Lösungen. ' +
     "Rätsel und Lösungen liegen nur in der Datenbank. Freunde sehen ein Türchen erst an seinem Tag und die Lösung erst, nachdem sie selbst geantwortet haben.</p>" +
     "<h2>Türchen</h2>";
   for (let day = 1; day <= 24; day++) root.append(doorEditor(day, doors[day], sols[day]));
@@ -73,7 +73,7 @@ function doorEditor(day, d, s) {
     '<div class="stack" data-only="riddle"><label class="lbl" data-for="solution">Lösung (wird nach der eigenen Antwort angezeigt)</label><input type="text" name="solution" value="' + esc(s.solution) + '"></div>' +
     '<div class="stack" data-only="riddle"><label class="lbl" data-for="accepted">Gilt als richtig (mit Komma getrennt)</label><input type="text" name="accepted" value="' + esc((s.accepted || []).join(", ")) + '">' +
       '<p class="small" data-for="acchint" style="text-align:left">Groß/klein, Leerzeichen und Umlaute sind egal. Begriffe ab 4 Buchstaben dürfen irgendwo in der Antwort stehen („schirm“ passt zu „ein Regenschirm“), kürzere müssen genau passen.</p></div>' +
-    '<button class="btn" type="submit">💾 Speichern</button>';
+    '<button class="btn" type="submit">Speichern</button>';
   det.append(f);
   const fotos = document.createElement("div");
   fotos.className = "raten-admin";
@@ -128,7 +128,7 @@ function doorEditor(day, d, s) {
     if (error) { toast(friendlyError(error)); return; }
     d = row;
     det.querySelector("summary").innerHTML = summary();
-    toast("Türchen " + day + " gespeichert ✔");
+    toast("Türchen " + day + " gespeichert");
   });
   return det;
 }
@@ -150,12 +150,12 @@ function ratenCard(day, r, reload) {
   const card = document.createElement("form");
   card.className = "raten-card" + (r ? "" : " new");
   card.innerHTML =
-    '<div class="raten-thumb">' + (r ? '<img alt="">' : "<span>➕</span>") + "</div>" +
+    '<div class="raten-thumb">' + (r ? '<img alt="">' : "<span>+</span>") + "</div>" +
     '<div class="stack">' +
       "<b>" + (r ? "Foto " + r.nr : "Neues Foto") + "</b>" +
       '<input type="text" name="sol" placeholder="Name" value="' + esc(r ? r.solution : "") + '">' +
       '<input type="text" name="acc" placeholder="Andere Schreibweisen (Komma)" value="' + esc(r ? (r.accepted || []).filter(a => a !== r.solution).join(", ") : "") + '">' +
-      '<label class="linkbtn raten-file">' + (r ? "📷 Foto austauschen" : "📷 Foto auswählen") + '<input type="file" name="file" accept="image/*" hidden></label>' +
+      '<label class="linkbtn raten-file">' + (r ? "Foto austauschen" : "Foto auswählen") + '<input type="file" name="file" accept="image/*" hidden></label>' +
       '<span class="small raten-chosen"></span>' +
       '<div class="raten-btns"><button class="btn small-btn" type="submit">' + (r ? "Speichern" : "Hinzufügen") + "</button>" +
       (r ? '<button class="linkbtn" type="button" name="del">Löschen</button>' : "") + "</div>" +
@@ -186,7 +186,7 @@ function ratenCard(day, r, reload) {
     const { error } = await sb.rpc("raten_admin_save", { d: day, n: r ? r.nr : null, sol, acc, st: stages });
     btn.disabled = false;
     if (error) { toast(friendlyError(error)); return; }
-    toast(r ? "Foto " + r.nr + " gespeichert ✔" : "Foto hinzugefügt ✔");
+    toast(r ? "Foto " + r.nr + " gespeichert" : "Foto hinzugefügt");
     reload();
   });
   if (r) card.querySelector('[name="del"]').addEventListener("click", async () => {
@@ -217,7 +217,7 @@ async function memeAdmin(day, box) {
   box.innerHTML =
     "<h3>Foto</h3>" +
     '<div class="meme-admin"><img alt="Foto zum Beschriften" hidden><p class="small" style="text-align:left">Lädt …</p></div>' +
-    '<label class="btn raten-file">📷 Foto austauschen<input type="file" accept="image/*" hidden></label>' +
+    '<label class="btn raten-file">Foto austauschen<input type="file" accept="image/*" hidden></label>' +
     '<p class="small" style="text-align:left">Das neue Foto ersetzt das alte sofort. Am besten als JPG.</p>';
   const img = box.querySelector("img"), msg = box.querySelector(".meme-admin p"), input = box.querySelector("input");
   async function show() {
@@ -235,7 +235,7 @@ async function memeAdmin(day, box) {
     const { error } = await sb.storage.from("tuerchen").upload(day + ".jpg", blob, { upsert: true, contentType: "image/jpeg" });
     input.value = "";
     if (error) { msg.textContent = friendlyError(error); return; }
-    toast("Foto für Türchen " + day + " ausgetauscht ✔");
+    toast("Foto für Türchen " + day + " ausgetauscht");
     show();
   });
   show();
@@ -259,7 +259,7 @@ function resetBox() {
     "<h2>Zurücksetzen</h2>" +
     '<p class="small" style="text-align:left">Löscht alle Antworten, hochgeladenen Fotos und Zeichnungen, Zulosungen bei {person} und Spielstände. ' +
     "Alle Flaschen sind danach wieder zu. Türchen, Lösungen, Fotos für die Rätsel und die Leute bleiben. Das lässt sich nicht rückgängig machen.</p>" +
-    '<button class="btn danger" type="button">🧹 Alles zurücksetzen</button>';
+    '<button class="btn danger" type="button">Alles zurücksetzen</button>';
   const btn = box.querySelector("button");
   btn.addEventListener("click", async () => {
     const word = prompt("Wirklich alles löschen? Dann tippe RESET ein.");
@@ -273,11 +273,11 @@ function resetBox() {
       ({ error } = await sb.storage.from("posts").remove(paths.slice(i, i + 100)));
     }
     if (!error) ({ error } = await sb.rpc("admin_reset"));
-    btn.disabled = false; btn.textContent = "🧹 Alles zurücksetzen";
+    btn.disabled = false; btn.textContent = "Alles zurücksetzen";
     if (error) { toast(friendlyError(error)); return; }
     const { data: settings } = await sb.from("app_settings").select("reset_at").maybeSingle();
     if (settings) state.resetAt = settings.reset_at;
-    toast("Alles zurückgesetzt ✔");
+    toast("Alles zurückgesetzt");
   });
   return box;
 }

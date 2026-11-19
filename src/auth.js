@@ -15,11 +15,11 @@ export function renderLogin(app) {
   app.innerHTML = windowCard("Anmelden.exe",
     '<p class="emoji small" aria-hidden="true">🥂🎄</p>' +
     '<p class="question">Willkommen, Brunchie!</p>' +
-    '<p class="small">Gib deine E-Mail-Adresse ein. Du bekommst einen Link, mit dem du direkt drin bist. Kein Passwort nötig.</p>' +
+    '<p class="small">Gib deine E-Mail-Adresse ein, dann bekommst du einen Link zum Anmelden.</p>' +
     '<form id="mailForm" class="stack" style="display:grid">' +
       '<label class="lbl" for="email">E-Mail</label>' +
       '<input type="email" id="email" required autocomplete="email" inputmode="email" placeholder="du@beispiel.de" value="' + esc(email) + '">' +
-      '<button class="btn" type="submit" id="sendBtn">✉️ Login-Link schicken</button>' +
+      '<button class="btn" type="submit" id="sendBtn">Login-Link schicken</button>' +
     "</form>" +
     '<form id="codeForm" class="stack" style="display:grid" hidden>' +
       '<p class="small" id="sentMsg"></p>' +
@@ -46,7 +46,7 @@ export function renderLogin(app) {
     if (error) { setFeedback(fb, friendlyError(error), "no"); return; }
     try { localStorage.setItem("brunchies-email", email); } catch (e2) { /* egal */ }
     mailForm.hidden = true; codeForm.hidden = false;
-    $("#sentMsg").innerHTML = "📬 Schau in dein Postfach (<b>" + esc(email) + "</b>), auch im Spam-Ordner. Tipp auf den Link in der Mail.";
+    $("#sentMsg").innerHTML = "Die Mail ist unterwegs an <b>" + esc(email) + "</b>. Falls sie nicht ankommt, schau im Spam-Ordner.";
     setFeedback(fb, "");
   });
 
@@ -69,12 +69,11 @@ export function renderLogin(app) {
 // ---------- Namen festlegen (beim ersten Mal oder zum Ändern) ----------
 export function renderName(app, { current = "", userId, onDone, onCancel = null }) {
   app.innerHTML = windowCard("Name.exe",
-    '<p class="emoji small" aria-hidden="true">🧇</p>' +
-    '<p class="question">' + (current ? "Neuer Name?" : "Wie sollen dich die anderen sehen?") + "</p>" +
+    '<p class="question">' + (current ? "Neuer Name?" : "Wie heißt du?") + "</p>" +
     '<form id="nameForm" class="stack" style="display:grid">' +
       '<label class="lbl" for="name">Dein Name</label>' +
       '<input type="text" id="name" maxlength="30" required autocomplete="nickname" placeholder="z. B. Alex" value="' + esc(current) + '">' +
-      '<button class="btn" type="submit" id="saveBtn">Los geht\'s 🎄</button>' +
+      '<button class="btn" type="submit" id="saveBtn">Weiter</button>' +
       (onCancel ? '<button class="btn ghost" type="button" id="cancelBtn">Abbrechen</button>' : "") +
     "</form>" +
     '<p class="feedback" id="fb" aria-live="polite"></p>', "#00bfc4");

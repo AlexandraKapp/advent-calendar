@@ -128,7 +128,7 @@ export function buildGuess({ day, door, body, overview }) {
     board.innerHTML = "";
     rows.forEach((r, i) => {
       const li = document.createElement("li");
-      li.innerHTML = '<b class="rank">' + (["🥇", "🥈", "🥉"][i] || (i + 1) + ".") + "</b><span>" + esc(r.is_me ? "Du" : r.name) + "</span><i>" + r.pts + "</i>";
+      li.innerHTML = '<b class="rank">' + ((i + 1) + ".") + "</b><span>" + esc(r.is_me ? "Du" : r.name) + "</span><i>" + r.pts + "</i>";
       if (r.is_me) li.classList.add("me");
       board.append(li);
     });

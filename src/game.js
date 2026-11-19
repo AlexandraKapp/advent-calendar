@@ -172,11 +172,11 @@ export function buildGame({ day, door, body, overview }) {
     startBtn.textContent = "Nochmal";
     overlay.hidden = false;
     if (revealed) return;
-    if (best !== null && score <= best) { setFeedback(fb, "Kein neuer Bestwert. Versuch's nochmal!"); return; }
+    if (best !== null && score <= best) { setFeedback(fb, "Kein neuer Bestwert."); return; }
     const { error } = await sb.from("answers").upsert({ day, user_id: state.userId, answer: String(score) }, { onConflict: "day,user_id" });
     if (error) { setFeedback(fb, friendlyError(error), "no"); return; }
     best = score;
-    setFeedback(fb, "Neuer Bestwert gespeichert! 🎉", "yes");
+    setFeedback(fb, "Neuer Bestwert.", "yes");
     load();
   }
 
@@ -192,20 +192,20 @@ export function buildGame({ day, door, body, overview }) {
     if (!canSee) {
       const n = overview.count || 0;
       gcount.textContent = n ? plural(n, "Person", "Personen") : "";
-      board.innerHTML = '<li class="note locked-gal">' + (n ? plural(n, "Person hat", "Personen haben") + " schon gespielt. Spiel erst selbst, dann siehst du die Liste."
-        : "Noch hat niemand gespielt. Sei die oder der Erste!") + "</li>";
+      board.innerHTML = '<li class="note locked-gal">' + (n ? plural(n, "Person hat", "Personen haben") + " schon gespielt. Die Liste siehst du nach deiner ersten Runde."
+        : "Noch hat niemand gespielt.") + "</li>";
       return;
     }
     gcount.textContent = rows.length ? plural(rows.length, "Person", "Personen") : "";
     rows.sort((a, b) => b.pts - a.pts);
     rows.forEach((r, i) => {
       const li = document.createElement("li");
-      const medal = ["🥇", "🥈", "🥉"][i] || (i + 1) + ".";
+      const medal = (i + 1) + ".";
       li.innerHTML = '<b class="rank">' + medal + "</b><span>" + esc(r.is_me ? "Du" : r.name) + "</span><i>" + r.pts + "</i>";
       if (r.is_me) li.classList.add("me");
       if (state.isAdmin) {
         const del = document.createElement("button");
-        del.type = "button"; del.className = "linkbtn"; del.textContent = "🗑"; del.title = "Eintrag löschen";
+        del.type = "button"; del.className = "linkbtn"; del.textContent = "Löschen"; del.title = "Eintrag löschen";
         del.addEventListener("click", async () => {
           if (!confirm("Eintrag von " + r.name + " löschen?")) return;
           const { error: e } = await sb.from("answers").delete().eq("day", day).eq("user_id", r.user_id);

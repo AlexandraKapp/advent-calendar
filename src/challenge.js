@@ -13,7 +13,7 @@ export function buildChallenge({ day, door, body, overview }) {
   let mode = door.kind === "zeichnen" ? "draw" : "foto";
 
   const fotoHtml =
-    '<div data-mode="foto"><label class="btn upload" for="photo">📸 Foto machen oder auswählen</label><input type="file" id="photo" accept="image/*" class="sr">' +
+    '<div data-mode="foto"><label class="btn upload" for="photo">Foto machen oder auswählen</label><input type="file" id="photo" accept="image/*" class="sr">' +
     '<img id="photoPrev" class="prev" alt="Deine Vorschau" hidden></div>';
   const drawHtml =
     '<div data-mode="draw" class="stack"><div class="pad-wrap"><canvas id="pad" width="800" height="800" aria-label="Zeichenfläche"></canvas><span class="timer" id="timer">' + secs + " s</span></div>" +
@@ -30,8 +30,8 @@ export function buildChallenge({ day, door, body, overview }) {
     '<p class="question" id="task"></p>' +
     '<div id="maker" class="stack">' +
       (isFree ? '<div class="modes" role="tablist">' +
-        '<button type="button" class="on" data-pick="foto">📸 Foto</button>' +
-        '<button type="button" data-pick="draw">✏️ Zeichnen</button>' +
+        '<button type="button" class="on" data-pick="foto">Foto</button>' +
+        '<button type="button" data-pick="draw">Zeichnen</button>' +
         '<button type="button" data-pick="text">Aa Text</button></div>' : "") +
       (door.kind === "zeichnen" ? drawHtml : door.kind === "foto" ? fotoHtml : fotoHtml + drawHtml + textHtml) +
       '<button class="btn" id="postBtn" type="button"' + (door.kind === "foto" ? " hidden" : "") + ">Posten</button>" +
@@ -111,7 +111,7 @@ export function buildChallenge({ day, door, body, overview }) {
       return;
     }
     pending = null;
-    setFeedback(fb, "Gepostet! 🎉 Jetzt siehst du, was die anderen gemacht haben.", "yes");
+    setFeedback(fb, "Gepostet.", "yes");
     loadGallery();
   });
 
@@ -132,12 +132,12 @@ export function buildChallenge({ day, door, body, overview }) {
       const n = overview.count || 0;
       gcount.textContent = n ? plural(n, "Beitrag", "Beiträge") : "";
       gal.innerHTML = '<p class="note locked-gal">' + (n
-        ? plural(n, "Beitrag wartet", "Beiträge warten") + ". Poste zuerst selbst, dann siehst du alle."
-        : "Noch keine Beiträge. Sei die oder der Erste!") + "</p>";
+        ? plural(n, "Beitrag wartet", "Beiträge warten") + ". Du siehst sie, sobald du selbst etwas gepostet hast."
+        : "Noch keine Beiträge.") + "</p>";
       return;
     }
     gcount.textContent = rows.length ? plural(rows.length, "Beitrag", "Beiträge") : "";
-    if (!rows.length) { gal.innerHTML = '<p class="note">Noch keine Beiträge. Sei die oder der Erste!</p>'; return; }
+    if (!rows.length) { gal.innerHTML = '<p class="note">Noch keine Beiträge.</p>'; return; }
 
     const { data: signed } = await sb.storage.from(BUCKET).createSignedUrls(rows.map(r => r.path), 60 * 60);
     const reactMap = await loadReactions(day);
@@ -202,7 +202,7 @@ function setupPad(body, secs) {
     iv = setInterval(() => {
       left--; timerEl.textContent = left + " s";
       if (left <= 3) timerEl.classList.add("hot");
-      if (left <= 0) { clearInterval(iv); over = true; drawing = false; timerEl.textContent = "Zeit um! ⏰"; cv.classList.add("done"); }
+      if (left <= 0) { clearInterval(iv); over = true; drawing = false; timerEl.textContent = "Zeit um."; cv.classList.add("done"); }
     }, 1000);
   }
   function pos(e) {
