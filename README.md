@@ -22,7 +22,7 @@ sind verkorkt und haben ein Schloss. Öffnet man das Türchen des Tages, knallt 
 | **Schätzfrage** | Eine Zahl schätzen, ein Versuch | Direkt danach die richtige Zahl und eine Rangliste, wer am nächsten dran ist |
 
 - **Anmeldung ohne Passwort:** E-Mail eingeben, auf den Link in der Mail tippen (oder den Code eingeben), Namen wählen, fertig. Man bleibt den ganzen Monat angemeldet.
-- **Reaktionen:** Auf Antworten und Beiträge ohne richtig oder falsch (Fotos, Zeichnungen, Captions, freie Fragen) kann man mit 😂 oder ❤️ reagieren, aber nicht auf die eigenen.
+- **Reaktionen:** Auf Antworten und Beiträge ohne richtig oder falsch (Fotos, Zeichnungen, Captions, freie Fragen) kann man mit beliebigen Emojis reagieren (höchstens 3 pro Person und Antwort), aber nicht auf die eigenen.
 - **Gesamtwertung:** Rätsel richtig 2 Punkte, Platz 1–3 bei Schätzfrage und Spielen 3/2/1, jede Challenge 1 Punkt, jede bekommene Reaktion 1 Punkt.
 - **Admin-Bereich:** Türchen und Lösungen bearbeiten, Vorschau mit allen offenen Türchen, nach dem Testen alles zurücksetzen, Bewertungen von Hand korrigieren.
 

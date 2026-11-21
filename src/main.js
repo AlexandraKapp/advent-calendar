@@ -105,7 +105,7 @@ function show() {
 }
 
 // ---------- Erklärung: beim ersten Besuch oben, danach hinter „So funktioniert's“ ----------
-const INTRO = "Vom 1. bis 24. Dezember geht jeden Tag ein Türchen auf: mal ein Rätsel, mal ein Foto, eine Zeichnung oder etwas zum Schreiben. Pro Türchen hast du einen Versuch. Danach siehst du die Lösung und was die anderen gemacht haben. Mit Lachen oder Herz kannst du auf ihre Antworten reagieren, das gibt ihnen Punkte für die Gesamtwertung.";
+const INTRO = "Vom 1. bis 24. Dezember geht jeden Tag ein Türchen auf: mal ein Rätsel, mal ein Foto, eine Zeichnung oder etwas zum Schreiben. Pro Türchen hast du einen Versuch. Danach siehst du die Lösung und was die anderen gemacht haben. Mit einem Emoji kannst du auf ihre Antworten reagieren, jede Reaktion gibt ihnen einen Punkt für die Gesamtwertung.";
 const INTRO_KEY = "brunchies-intro-gesehen";
 function introSeen() { try { return localStorage.getItem(INTRO_KEY) === "1"; } catch { return false; } }
 function showHelp() {
@@ -117,7 +117,7 @@ function showHelp() {
     "<li>Rätsel richtig: <b>2</b></li>" +
     "<li>Spiele: Rangplatz 1–3 bekommt <b>3 / 2 / 1</b></li>" +
     "<li>Bei einer Challenge mitgemacht: <b>1</b></li>" +
-    "<li>Jedes 😂 oder ❤️ der anderen auf deine Antwort: <b>1</b></li>" +
+    "<li>Jede Emoji-Reaktion der anderen auf deine Antwort: <b>1</b> (höchstens 3 pro Person)</li>" +
     "</ul><p>Die rote Zahl an einer Flasche zeigt, wie viel dort neu ist, seit du zuletzt reingeschaut hast.</p></div>";
 }
 
