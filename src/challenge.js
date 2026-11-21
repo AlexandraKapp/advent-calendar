@@ -35,6 +35,7 @@ export function buildChallenge({ day, door, body, overview }) {
         '<button type="button" data-pick="text">Aa Text</button></div>' : "") +
       (door.kind === "zeichnen" ? drawHtml : door.kind === "foto" ? fotoHtml : fotoHtml + drawHtml + textHtml) +
       '<button class="btn" id="postBtn" type="button"' + (door.kind === "foto" ? " hidden" : "") + ">Posten</button>" +
+      '<p class="note-inline">Du hast einen Versuch. Gepostet ist gepostet.</p>' +
     "</div>" +
     '<p class="feedback" id="feedback" aria-live="polite"></p>' +
     '<div class="gallery-head"><h3>Galerie</h3><span id="gcount"></span></div>' +
@@ -106,7 +107,7 @@ export function buildChallenge({ day, door, body, overview }) {
     postBtn.disabled = false; postBtn.textContent = "Posten";
     if (error) {
       setFeedback(fb, /duplicate|unique/i.test(error.message || "")
-        ? "Du hast hier schon etwas gepostet. Lösch es zuerst, wenn du es ersetzen willst."
+        ? "Du hast hier schon etwas gepostet."
         : friendlyError(error), "no");
       return;
     }
@@ -153,7 +154,7 @@ export function buildChallenge({ day, door, body, overview }) {
       cap.textContent = (r.user_id === state.userId ? "Du" : (r.profiles ? r.profiles.name : "Jemand")) +
         (targetOf[r.user_id] ? " → " + targetOf[r.user_id] : "");
       fig.append(im, cap, reactionBar(day, r.user_id, r.id, reactMap));
-      if (r.user_id === state.userId || state.isAdmin) {
+      if (state.isAdmin) { // nur die Admin darf löschen (ein Versuch pro Türchen)
         const del = document.createElement("button");
         del.className = "del"; del.type = "button"; del.textContent = "Löschen";
         del.setAttribute("aria-label", "Beitrag löschen");

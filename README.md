@@ -17,7 +17,7 @@ sind verkorkt und haben ein Schloss. Öffnet man das Türchen des Tages, knallt 
 | Türchen | Was man macht | Was man sieht |
 |---|---|---|
 | **Emoji-Rätsel** (Filme & Serien) und **Worträtsel** | Antwort eintippen, ein Versuch | Direkt nach der eigenen Antwort die Lösung und die Antworten der anderen (mit Namen), jede mit ✔ oder ✘ |
-| **Foto-Challenge** | Foto aufnehmen oder aus der Galerie wählen; es wird vor dem Hochladen verkleinert | Die Galerie der anderen erst nach dem eigenen Beitrag. Eigene Beiträge lassen sich löschen |
+| **Foto-Challenge** | Foto aufnehmen oder aus der Galerie wählen; es wird vor dem Hochladen verkleinert | Die Galerie der anderen erst nach dem eigenen Beitrag. Ein Beitrag pro Person, danach nicht mehr änderbar |
 | **Zeichen-Challenge** | Im Browser mit dem Finger zeichnen, mit Countdown ab dem ersten Strich | wie bei der Foto-Challenge |
 | **Schätzfrage** | Eine Zahl schätzen, ein Versuch | Direkt danach die richtige Zahl und eine Rangliste, wer am nächsten dran ist |
 
