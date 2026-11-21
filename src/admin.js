@@ -98,7 +98,7 @@ function doorEditor(day, d, s) {
       el.hidden = !(only === "riddle" ? isRiddle : only === "challenge" ? (kind === "foto" || kind === "zeichnen" || kind === "frei") : only === "zeichnen" ? (kind === "zeichnen" || kind === "spiel") : kind === only);
     });
     f.querySelector('[data-for="question"]').textContent =
-      kind === "wort" ? "Rätselfrage" : kind === "aufgabe" ? "Aufgabe (Antwort: genau 3 Emojis, keine Lösung)" : kind === "frage" ? "Frage (freie Antwort, keine Lösung)" : kind === "schaetzen" ? "Schätzfrage (Antwort ist eine Zahl)" : kind === "meme" ? "Text über dem Foto (das Foto steht unter dem Speichern-Knopf)" : kind === "spiel" ? "Spielanleitung (leer = Standardtext)" : kind === "raten" ? "Text oben (die Fotos stehen unter dem Speichern-Knopf)" : kind === "emoji" ? "Frage (leer = „Welcher Film, welche Serie?“)" : kind === "rueckblick" ? "Text (wird nicht angezeigt)" : "Aufgabe";
+      kind === "wort" ? "Rätselfrage" : kind === "aufgabe" ? "Aufgabe (Antwort: genau 3 Emojis, keine Lösung)" : kind === "frage" ? "Frage (freie Antwort, keine Lösung)" : kind === "schaetzen" ? "Schätzfrage (Antwort ist eine Zahl)" : kind === "meme" ? "Text über dem Foto (das Foto steht unter dem Speichern-Knopf)" : kind === "spiel" ? "Spielanleitung (leer = Standardtext)" : kind === "raten" ? "Text oben (die Fotos stehen unter dem Speichern-Knopf)" : kind === "emoji" ? "Frage (leer = „Welcher Film?“)" : kind === "rueckblick" ? "Text (wird nicht angezeigt)" : "Aufgabe";
   }
   f.kind.addEventListener("change", () => { updateVisibility(); loadFotos(); });
   updateVisibility();

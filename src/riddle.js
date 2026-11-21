@@ -25,7 +25,7 @@ export async function buildRiddle({ day, door, body, overview }) {
       : door.kind === "wort" || isGuess
       ? (isGuess ? '<div class="emoji small">' + esc(door.emoji) + "</div>" : "") + '<p class="question">' + esc(door.question) + "</p>"
       : '<div class="emoji" aria-label="Emoji-Rätsel">' + esc(door.emoji) + "</div>" +
-        '<p class="ask">' + esc(door.question || "Welcher Film, welche Serie?") + "</p>") +
+        '<p class="ask">' + esc(door.question || "Welcher Film?") + "</p>") +
     '<p class="solution" id="solution" hidden></p>' +
     (revealed ? '<p class="note-inline" id="overNote">Dieser Tag ist vorbei. Mitmachen geht nicht mehr, aber du kannst dir alles ansehen und reagieren.</p>' :
       '<form id="answerForm"><label for="answer" class="sr">Deine Antwort</label>' +
