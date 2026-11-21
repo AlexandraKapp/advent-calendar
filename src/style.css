@@ -304,13 +304,19 @@ figure .react { padding: 0 8px 8px; }
 .react button { font: inherit; font-size: .9rem; background: #fff; border: 2px solid var(--ink); border-radius: 999px; padding: 2px 10px; cursor: pointer; }
 .react button.on { background: var(--yolk); }
 .react { flex-wrap: wrap; align-items: center; }
-.answers li .react, .answers li .react-pick { flex: 0 0 100%; } /* eigene Zeile unter der Antwort (sonst greift die Regel für Text-Spans) */
-.react .react-add { font-weight: 800; min-width: 34px; }
-.react-pick { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; flex-basis: 100%; padding: 6px; border: 2px solid var(--ink); border-radius: 10px; background: #fff; }
-.react-pick > button { font-size: 1.15rem; background: none; border: 0; padding: 2px 4px; cursor: pointer; }
-.react-pick form { display: flex; gap: 4px; margin-left: auto; }
-.react-pick input { width: 80px; padding: 4px 6px; border: 2px solid var(--ink); border-radius: 6px; font: inherit; }
-.react-pick form button { font: inherit; font-weight: 700; border: 2px solid var(--ink); border-radius: 6px; background: var(--yolk); padding: 2px 8px; cursor: pointer; }
+.answers li .react { flex: 0 0 100%; } /* eigene Zeile unter der Antwort (sonst greift die Regel für Text-Spans) */
+.react .react-add { display: inline-grid; place-items: center; padding: 2px 6px; color: #9a9a9a; border-color: #cfcfcf; background: transparent; }
+.react .react-add:hover { color: var(--ink); border-color: var(--ink); }
+/* Auswahl im Messenger-Stil: dunkle, runde Leiste mit großen Emojis */
+.react-pick { display: flex; flex-wrap: wrap; gap: 2px; align-items: center; width: fit-content; max-width: 100%; padding: 5px 8px; border-radius: 999px; background: #2a2a2e; box-shadow: 0 4px 14px rgba(0,0,0,.25); }
+.answers li .react-pick { flex: 0 0 auto; }
+.react .react-pick > button { font-size: 1.5rem; line-height: 1; background: none; border: 0; padding: 3px 4px; border-radius: 999px; cursor: pointer; transition: transform .1s; }
+.react .react-pick > button:hover { transform: scale(1.25); }
+.react .react-pick > button.more { font-size: 1rem; width: 30px; height: 30px; padding: 0; color: #fff; background: #4a4a50; }
+.react-pick form { display: flex; gap: 4px; }
+.react-pick form[hidden] { display: none; }
+.react-pick input { width: 70px; padding: 4px 8px; border: 0; border-radius: 999px; font: inherit; }
+.react .react-pick form button { font: inherit; font-weight: 700; border: 0; border-radius: 999px; background: var(--yolk); padding: 2px 10px; cursor: pointer; }
 .react button:disabled { cursor: default; opacity: .6; }
 .guess-solved { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; }
 .guess-solved figure { margin: 0; display: grid; gap: 4px; text-align: center; font-weight: 700; }

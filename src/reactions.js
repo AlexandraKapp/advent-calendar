@@ -5,6 +5,12 @@ import { toast, friendlyError } from "./ui.js";
 // Reaktionen mit beliebigem Emoji unter Antworten und Beiträgen ohne richtig/falsch.
 // Jede Reaktion = 1 Punkt für die Person. Pro Person und Antwort höchstens 3 verschiedene Emojis.
 const QUICK = ["😂", "❤️", "🔥", "👏", "😮", "🤯", "🥂", "🎄"];
+// Knopf zum Reagieren: graues Gesicht mit kleinem Plus
+const ADD_ICON =
+  '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="11" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.8"/>' +
+  '<circle cx="8.2" cy="10.2" r="1.1" fill="currentColor"/><circle cx="13.8" cy="10.2" r="1.1" fill="currentColor"/>' +
+  '<path d="M7.5 14c1 1.5 2.2 2.2 3.5 2.2s2.5-.7 3.5-2.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>' +
+  '<circle cx="19" cy="5" r="4.2" fill="var(--react-add-bg, #fff)"/><path d="M19 2.6v4.8M16.6 5h4.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
 const MAX_PER_ITEM = 3;
 
 export const hasReactions = kind => ["aufgabe", "frage", "meme", "foto", "zeichnen", "frei"].includes(kind);
@@ -57,7 +63,7 @@ export function reactionBar(day, author, post, map) {
     });
     if (!own) {
       const add = document.createElement("button");
-      add.type = "button"; add.className = "react-add"; add.textContent = "+";
+      add.type = "button"; add.className = "react-add"; add.innerHTML = ADD_ICON;
       add.setAttribute("aria-label", "Mit Emoji reagieren");
       add.addEventListener("click", () => openPicker(add));
       bar.append(add);
@@ -75,8 +81,14 @@ export function reactionBar(day, author, post, map) {
       b.addEventListener("click", () => { pick.remove(); toggle(e); });
       pick.append(b);
     });
+    // „⋯“: eigenes Emoji über die Emoji-Tastatur
+    const more = document.createElement("button");
+    more.type = "button"; more.className = "more"; more.textContent = "⋯"; more.setAttribute("aria-label", "Anderes Emoji");
     const form = document.createElement("form");
-    form.innerHTML = '<input type="text" maxlength="16" placeholder="anderes" aria-label="Eigenes Emoji"><button type="submit">OK</button>';
+    form.hidden = true;
+    form.innerHTML = '<input type="text" maxlength="16" placeholder="Emoji" aria-label="Eigenes Emoji"><button type="submit">OK</button>';
+    more.addEventListener("click", () => { form.hidden = false; more.hidden = true; form.querySelector("input").focus(); });
+    pick.append(more);
     form.addEventListener("submit", ev => {
       ev.preventDefault();
       const v = form.querySelector("input").value.trim();
